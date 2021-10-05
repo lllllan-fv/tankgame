@@ -1,13 +1,10 @@
 package cn.lllllan.tank;
 
-import cn.lllllan.bullet.BulletImpl;
-
 import java.awt.*;
-import java.util.Vector;
 
 
 /**
- * 坦克的基类，定义了一些基本的参数和方法
+ * 坦克的基类，只提供绘制和移动方法
  *
  * @author lllllan
  * <p>
@@ -45,10 +42,6 @@ public class TankImpl implements Tank, Runnable {
      */
     private boolean isLive;
 
-    /**
-     * 子弹列表
-     */
-    Vector<BulletImpl> bullets;
 
     /**
      * 规定了坦克可以使用的颜色组
@@ -201,6 +194,7 @@ public class TankImpl implements Tank, Runnable {
      * @date 2021/10/4 23:59
      */
     public void moveUp(int move) {
+        System.out.println("moveup");
         y -= move;
     }
 
