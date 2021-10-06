@@ -42,6 +42,20 @@ public class TankPlus extends TankImpl implements Tank, Runnable {
     private String imgUrl;
     private Image img = null;
 
+    private boolean moving;
+    private int speed;
+
+    public TankPlus(int tankType, int tankID, int x, int y) {
+        super(x, y, 0, 0);
+
+        this.tankType = tankType;
+        this.tankID = tankID;
+        this.moving = false;
+        this.speed = super.getSPEED();
+
+        setProperty();
+    }
+
 
     /**
      * Desc: 根据方向找到对应的坦克图片
@@ -61,13 +75,21 @@ public class TankPlus extends TankImpl implements Tank, Runnable {
         img = Toolkit.getDefaultToolkit().getImage(url);
     }
 
-    public TankPlus(int tankType, int tankID, int x, int y) {
-        super(x, y, 0, 0);
+    public boolean isMoving() {
+        return moving;
+    }
 
-        this.tankType = tankType;
-        this.tankID = tankID;
+    public void setMoving(boolean moving) {
+        this.moving = moving;
+    }
 
-        setProperty();
+    public int getTankID() {
+        return tankID;
+    }
+
+    public void setCoordination(int x, int y) {
+        super.setX(x);
+        super.setY(y);
     }
 
     @Override
@@ -92,7 +114,12 @@ public class TankPlus extends TankImpl implements Tank, Runnable {
         if (tankType == 0) {
             super.paint(g);
         } else {
-            g.drawImage(img, super.getX(), super.getY(), super.getWIDTH(), super.getHEIGHT(), observer);
+            g.drawImage(img, super.getX(), super.getY(), super.getWidth(), super.getHeight(), observer);
         }
+    }
+
+    @Override
+    public void run() {
+
     }
 }

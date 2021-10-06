@@ -8,10 +8,11 @@ package cn.lllllan.tank;
 
 @SuppressWarnings({"all"})
 
-public class UserTank extends TankPlus implements Tank, Runnable {
+public class UserTank extends TankPlus implements Tank {
+
 
     public UserTank(int tankID, int x, int y) {
         super(1, tankID, x, y);
     }
-
+    
 }

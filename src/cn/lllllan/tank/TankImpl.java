@@ -13,14 +13,12 @@ import java.awt.*;
 
 @SuppressWarnings({"all"})
 
-public class TankImpl implements Tank, Runnable {
+public class TankImpl implements Tank {
 
     /**
      * 坦克设计成一个正方形的样式，方便各个方向的绘制
      */
     private static final int SIZE = 50;
-    private static final int WIDTH = SIZE;
-    private static final int HEIGHT = SIZE;
 
     /**
      * 坦克的移动速度
@@ -85,12 +83,12 @@ public class TankImpl implements Tank, Runnable {
         return SIZE;
     }
 
-    public static int getWIDTH() {
-        return WIDTH;
+    public static int getWidth() {
+        return SIZE;
     }
 
-    public static int getHEIGHT() {
-        return HEIGHT;
+    public static int getHeight() {
+        return SIZE;
     }
 
     public static Color[] getTankColors() {
@@ -115,6 +113,14 @@ public class TankImpl implements Tank, Runnable {
 
     public int getY() {
         return y;
+    }
+
+    public void setX(int x) {
+        this.x = x;
+    }
+
+    public void setY(int y) {
+        this.y = y;
     }
 
     public int getDirect() {
@@ -230,15 +236,5 @@ public class TankImpl implements Tank, Runnable {
     public void moveRight(int move) {
         x += move;
     }
-
-    /**
-     * Desc: Runnable 的 run 方法
-     *
-     * @author lllllan
-     * @date 2021/10/5 0:00
-     */
-    public void run() {
-
-    }
-
+ 
 }
