@@ -1,12 +1,12 @@
 package cn.lllllan.game;
 
+import cn.lllllan.cube.tank.UserTank;
+import cn.lllllan.cube.tank.UserTank1;
+import cn.lllllan.cube.tank.UserTank2;
 import cn.lllllan.stage.InitialStage;
 import cn.lllllan.stage.LevelStage;
 import cn.lllllan.stage.SelectStage;
 import cn.lllllan.stage.Stage;
-import cn.lllllan.tank.UserTank;
-import cn.lllllan.tank.UserTank1;
-import cn.lllllan.tank.UserTank2;
 
 import javax.swing.*;
 import java.awt.event.KeyEvent;
@@ -127,7 +127,7 @@ public class Game implements KeyListener {
         UserTank user2 = flag ? new UserTank2(0, 0) : null;
 
         for (LevelStage level : levels) {
-            level.setUsers(user1, user2);
+            level.setUserTanks(user1, user2);
         }
     }
 

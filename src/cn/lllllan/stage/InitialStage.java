@@ -1,6 +1,6 @@
 package cn.lllllan.stage;
 
-import cn.lllllan.barrier.BarrierImpl;
+import cn.lllllan.cube.barrier.BarrierImpl;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;

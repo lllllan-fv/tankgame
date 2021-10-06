@@ -12,14 +12,12 @@ import java.awt.*;
 
 @SuppressWarnings({"all"})
 
-public class BulletImpl implements Bullet, Runnable {
+public class BulletImpl implements Bullet {
 
     /**
      * 规定子弹的大小
      */
     private static final int SIZE = 4;
-    private static final int WIDTH = SIZE;
-    private static final int HEIGHT = SIZE;
 
     /**
      * 子弹的移动速度
@@ -39,6 +37,7 @@ public class BulletImpl implements Bullet, Runnable {
      * 记录子弹是否存活
      */
     private boolean isLive;
+    private boolean isEnemy;
 
     /**
      * Desc: 有参构造，规定了子弹的起始位置和移动方向
@@ -50,10 +49,11 @@ public class BulletImpl implements Bullet, Runnable {
      * @author lllllan
      * @date 2021/10/5 0:33
      */
-    public BulletImpl(int x, int y, int direct) {
+    public BulletImpl(int x, int y, int direct, boolean isEnemy) {
         this.x = x;
         this.y = y;
         this.direct = direct;
+        this.isEnemy = isEnemy;
         this.isLive = true;
 
         // 根据方向设置偏移量 offsetX, offsetY
@@ -81,12 +81,12 @@ public class BulletImpl implements Bullet, Runnable {
         return SIZE;
     }
 
-    public static int getWIDTH() {
-        return WIDTH;
+    public int getWIDTH() {
+        return SIZE;
     }
 
-    public static int getHEIGHT() {
-        return HEIGHT;
+    public int getHEIGHT() {
+        return SIZE;
     }
 
     public static int getSPEED() {
@@ -117,6 +117,10 @@ public class BulletImpl implements Bullet, Runnable {
         return isLive;
     }
 
+    public boolean isEnemy() {
+        return isEnemy;
+    }
+
     public void setLive(boolean live) {
         isLive = live;
     }
@@ -143,14 +147,5 @@ public class BulletImpl implements Bullet, Runnable {
         x += offsetX;
         y += offsetY;
     }
-
-    /**
-     * Desc: Runnable 接口的 run 方法
-     *
-     * @author lllllan
-     * @date 2021/10/5 0:23
-     */
-    public void run() {
-
-    }
+ 
 }

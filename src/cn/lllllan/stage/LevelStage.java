@@ -1,9 +1,10 @@
 package cn.lllllan.stage;
 
-import cn.lllllan.barrier.*;
 import cn.lllllan.bullet.BulletImpl;
-import cn.lllllan.tank.EnemyTank;
-import cn.lllllan.tank.UserTank;
+import cn.lllllan.cube.Cube;
+import cn.lllllan.cube.barrier.*;
+import cn.lllllan.cube.tank.EnemyTank;
+import cn.lllllan.cube.tank.UserTank;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -62,7 +63,7 @@ public class LevelStage extends Stage implements Runnable {
 
     }
 
-    public void setUsers(UserTank user1, UserTank user2) {
+    public void setUserTanks(UserTank user1, UserTank user2) {
         this.user1 = user1;
         this.user2 = user2;
 
@@ -70,15 +71,199 @@ public class LevelStage extends Stage implements Runnable {
         if (user2 != null) user2.setCoordination(200, 100);
     }
 
-    public void usersMove() {
-        if (user1 != null && user1.isMoving()) {
-            int direct = user1.getDirect();
+    public int calculateDistanceOfUserTankToOtherCubes(UserTank user, Cube cube) {
+        int ans = Integer.MAX_VALUE;
+
+        if (cube.isCanTankPass()) return ans;
+
+        int direct = user.getDirect();
+
+        if (direct == 0 && user.getY() >= cube.getY() + cube.getHeight()) {
+
+            if (!(cube.getX() >= user.getX() + user.getWidth() || cube.getX() + cube.getWidth() <= user.getX())) {
+                ans = Math.min(ans, user.getY() - (cube.getY() + cube.getHeight()));
+            }
+
+        } else if (direct == 1 && cube.getX() >= user.getX() + user.getWidth()) {
+
+            if (!(cube.getY() >= user.getY() + user.getHeight() || cube.getY() + cube.getHeight() <= user.getY())) {
+                ans = Math.min(ans, cube.getX() - (user.getX() + user.getWidth()));
+            }
+
+        } else if (direct == 2 && cube.getY() >= user.getY() + user.getHeight()) {
+
+            if (!(cube.getX() >= user.getX() + user.getWidth() || cube.getX() + cube.getWidth() <= user.getX())) {
+                ans = Math.min(ans, cube.getY() - (user.getY() + user.getHeight()));
+            }
+
+        } else if (direct == 3 && user.getX() >= cube.getX() + cube.getWidth()) {
+
+            if (!(cube.getY() >= user.getY() + user.getHeight() || cube.getY() + cube.getHeight() <= user.getY())) {
+                ans = Math.min(ans, user.getX() - (cube.getX() + cube.getWidth()));
+            }
+
         }
 
-        if (user2 != null && user2.isMoving()) {
-            int direct = user2.getDirect();
+        if (ans == 0) {
+            System.out.println("user: " + user.getX() + " " + user.getY());
+            System.out.println("cube: " + cube.getX() + " " + cube.getY());
+        }
+
+        return ans;
+    }
+
+    public void userTankMove(UserTank user, int direct) {
+        if (user == null || direct == -1) return;
+
+        if (user.getDirect() != direct) {
+
+            user.setDirect(direct);
+
+        } else {
+
+            int speed = user.getSPEED();
+
+            if (user1 != null && user != user1) {
+                speed = Math.min(speed, calculateDistanceOfUserTankToOtherCubes(user, user1));
+            }
+
+            if (user2 != null && user != user2) {
+                speed = Math.min(speed, calculateDistanceOfUserTankToOtherCubes(user, user2));
+            }
+
+            for (EnemyTank enemyTank : enemyTanks) {
+                speed = Math.min(speed, calculateDistanceOfUserTankToOtherCubes(user, enemyTank));
+            }
+
+            for (BarrierImpl barrier : barriers) {
+                speed = Math.min(speed, calculateDistanceOfUserTankToOtherCubes(user, barrier));
+            }
+
+            if (direct == 0) {
+
+                speed = Math.min(speed, user.getY() - Cube.getSIZE());
+
+            } else if (direct == 1) {
+
+                speed = Math.min(speed, WIDTH - (user.getX() + user.getWidth()));
+
+            } else if (direct == 2) {
+
+                speed = Math.min(speed, HEIGHT - -(user.getY() + user.getHeight()));
+
+            } else {
+
+                speed = Math.min(speed, user.getX() - Cube.getSIZE());
+
+            }
+
+            System.out.println("speed = " + speed);
+
+            user.setSpeed(speed);
+
+            switch (direct) {
+                case 0:
+                    user.moveUp(speed);
+                    break;
+                case 1:
+                    user.moveRight(speed);
+                    break;
+                case 2:
+                    user.moveDown(speed);
+                    break;
+                case 3:
+                    user.moveLeft(speed);
+                    break;
+            }
         }
     }
+
+    public void user1Move(KeyEvent e) {
+        if (user1 == null) return;
+
+        switch (e.getKeyCode()) {
+            case KeyEvent.VK_W:
+                userTankMove(user1, 0);
+                break;
+            case KeyEvent.VK_D:
+                userTankMove(user1, 1);
+                break;
+            case KeyEvent.VK_S:
+                userTankMove(user1, 2);
+                break;
+            case KeyEvent.VK_A:
+                userTankMove(user1, 3);
+                break;
+            default:
+                break;
+        }
+
+    }
+
+    public void user2Move(KeyEvent e) {
+        if (user2 == null) return;
+
+        switch (e.getKeyCode()) {
+            case KeyEvent.VK_UP:
+                userTankMove(user2, 0);
+                break;
+            case KeyEvent.VK_RIGHT:
+                userTankMove(user2, 1);
+                break;
+            case KeyEvent.VK_DOWN:
+                userTankMove(user2, 2);
+                break;
+            case KeyEvent.VK_LEFT:
+                userTankMove(user2, 3);
+                break;
+            default:
+                break;
+        }
+    }
+
+
+    @Override
+    public void paint(Graphics g) {
+        super.paint(g);
+
+        paintSplitLine(g);
+        paintTips(g);
+
+        paintUsers(g);
+        paintEnemyTanks(g);
+        paintBarriers(g);
+        paintBullets(g);
+    }
+
+    @Override
+    public void run() {
+        while (true) {
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                System.out.println("level InterruptedException");
+                break;
+            }
+
+            this.repaint();
+        }
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {
+    }
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+        user1Move(e);
+        user2Move(e);
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+        System.out.println(e.getKeyCode() + "releas");
+    }
+
 
     public void paintSplitLine(Graphics g) {
         g.setColor(Color.white);
@@ -113,60 +298,5 @@ public class LevelStage extends Stage implements Runnable {
         for (BarrierImpl barrier : barriers) {
             barrier.paint(g, this);
         }
-    }
-
-    @Override
-    public void paint(Graphics g) {
-        super.paint(g);
-
-        paintSplitLine(g);
-        paintTips(g);
-
-        paintUsers(g);
-        paintEnemyTanks(g);
-        paintBarriers(g);
-        paintBullets(g);
-    }
-
-    @Override
-    public void run() {
-        while (true) {
-            try {
-                Thread.sleep(50);
-            } catch (InterruptedException e) {
-                System.out.println("level InterruptedException");
-                break;
-            }
-
-            usersMove();
-            this.repaint();
-        }
-    }
-
-    @Override
-    public void keyTyped(KeyEvent e) {
-    }
-
-    @Override
-    public void keyPressed(KeyEvent e) {
-        switch (e.getKeyCode()) {
-            case KeyEvent.VK_W:
-                user1.moveUp(user1.getSPEED());
-                break;
-            case KeyEvent.VK_S:
-                user1.moveDown(user1.getSPEED());
-                break;
-            case KeyEvent.VK_A:
-                user1.moveLeft(user1.getSPEED());
-                break;
-            case KeyEvent.VK_D:
-                user1.moveRight(user1.getSPEED());
-                break;
-        }
-    }
-
-    @Override
-    public void keyReleased(KeyEvent e) {
-        System.out.println(e.getKeyCode() + "releas");
     }
 }
