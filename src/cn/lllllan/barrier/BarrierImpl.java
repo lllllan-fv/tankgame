@@ -20,17 +20,6 @@ public class BarrierImpl implements Barrier {
      * 规定了障碍物的尺寸
      */
     private static final int SIZE = 50;
-    private static final int WIDTH = SIZE;
-    private static final int HEIGHT = SIZE;
-
-    /**
-     * 三种墙体的图片路径
-     */
-    private static final String[] imgUrls = new String[]{
-            "/img/barrier/walls.gif",
-            "/img/barrier/water.gif",
-            "/img/barrier/steels.gif"
-    };
 
     /**
      * 障碍物左上角的 x,y 坐标
@@ -158,12 +147,12 @@ public class BarrierImpl implements Barrier {
         return SIZE;
     }
 
-    public static int getWIDTH() {
-        return WIDTH;
+    public int getWidth() {
+        return SIZE;
     }
 
-    public static int getHEIGHT() {
-        return HEIGHT;
+    public int getHeight() {
+        return SIZE;
     }
 
     public int getX() {
@@ -172,10 +161,6 @@ public class BarrierImpl implements Barrier {
 
     public int getY() {
         return y;
-    }
-
-    public void setImgUrl(String imgUrl) {
-        this.imgUrl = imgUrl;
     }
 
     /**
