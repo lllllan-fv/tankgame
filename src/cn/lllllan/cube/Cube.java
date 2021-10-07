@@ -28,7 +28,7 @@ public class Cube {
         this.canBulletPass = canBulletPass;
     }
 
-    public void setsetProperty(boolean canBeBorken, boolean canTankPass, boolean canBulletPass) {
+    public void setProperty(boolean canBeBorken, boolean canTankPass, boolean canBulletPass) {
         this.canBeBorken = canBeBorken;
         this.canTankPass = canTankPass;
         this.canBulletPass = canBulletPass;

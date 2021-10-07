@@ -11,7 +11,7 @@ import java.awt.event.KeyEvent;
 
 @SuppressWarnings({"all"})
 
-public class SelectStage extends Stage implements Runnable {
+public class LevelSelectStage extends Stage implements Runnable {
 
     private int maxLevel;
     private int level;
@@ -43,28 +43,27 @@ public class SelectStage extends Stage implements Runnable {
         }
     }
 
-    public void levelUp() {
+    public void keyUp() {
         if (level - 4 >= 0) level -= 4;
     }
 
-    public void levelDown() {
+    public void keyDown() {
         if (level + 4 <= maxLevel) level += 4;
     }
 
-    public void levelLeft() {
+    public void keyLeft() {
         if (level == 4) {
             level = 3;
         } else if (level > 0) level--;
     }
 
-    public void levelRight() {
+    public void keyRight() {
         if (level == 3 && maxLevel > 3) level = 4;
         else if (level < maxLevel) level++;
     }
 
     @Override
     public void keyTyped(KeyEvent e) {
-        super.keyTyped(e);
     }
 
     @Override
@@ -74,26 +73,25 @@ public class SelectStage extends Stage implements Runnable {
         switch (keyCode) {
             case KeyEvent.VK_W:
             case KeyEvent.VK_UP:
-                levelUp();
+                keyUp();
                 break;
             case KeyEvent.VK_S:
             case KeyEvent.VK_DOWN:
-                levelDown();
+                keyDown();
                 break;
             case KeyEvent.VK_A:
             case KeyEvent.VK_LEFT:
-                levelLeft();
+                keyLeft();
                 break;
             case KeyEvent.VK_D:
             case KeyEvent.VK_RIGHT:
-                levelRight();
+                keyRight();
                 break;
         }
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
-        super.keyReleased(e);
     }
 
     @Override
@@ -102,7 +100,7 @@ public class SelectStage extends Stage implements Runnable {
             try {
                 Thread.sleep(50);
             } catch (InterruptedException e) {
-                System.out.println("initial InterruptedException");
+                System.out.println("level select InterruptedException");
                 break;
             }
 

@@ -11,13 +11,6 @@ import java.awt.image.ImageObserver;
  * version 0.1.0
  **/
 public interface Barrier {
-
-    /**
-     * Desc: 障碍物的绘制方法
-     *
-     * @return
-     * @author lllllan
-     * @date 2021/10/5 9:57
-     */
+ 
     public abstract void paint(Graphics g, ImageObserver observer);
 }

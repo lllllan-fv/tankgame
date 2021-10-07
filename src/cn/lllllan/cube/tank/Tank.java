@@ -1,12 +1,13 @@
 package cn.lllllan.cube.tank;
 
 import java.awt.*;
+import java.awt.image.ImageObserver;
 
 @SuppressWarnings({"all"})
 
 public interface Tank {
 
-    public abstract void paint(Graphics g);
+    public abstract void paint(Graphics g, ImageObserver observer);
 
     public abstract void moveUp(int move);
 

@@ -1,6 +1,10 @@
 package cn.lllllan.bullet;
 
+import cn.lllllan.cube.barrier.BarrierImpl;
+
 import java.awt.*;
+import java.awt.image.ImageObserver;
+import java.net.URL;
 
 /**
  * 子弹的基类，规定了一些基本参数和方法
@@ -14,41 +18,18 @@ import java.awt.*;
 
 public class BulletImpl implements Bullet {
 
-    /**
-     * 规定子弹的大小
-     */
-    private static final int SIZE = 4;
+    private static final int SIZE = 5;
+    private static final int SPEED = 25;
 
-    /**
-     * 子弹的移动速度
-     */
-    private static final int SPEED = 10;
-
-    /**
-     * 分别是子弹左上角的 x,y 坐标，移动方向，偏移量 offsetX, offsetY
-     */
     private int x;
     private int y;
     private int direct;
     private int offsetX;
     private int offsetY;
 
-    /**
-     * 记录子弹是否存活
-     */
     private boolean isLive;
     private boolean isEnemy;
 
-    /**
-     * Desc: 有参构造，规定了子弹的起始位置和移动方向
-     * <p>并根据移动方向计算好 x,y 的偏移量
-     *
-     * @param x      起始位置左上角 x 坐标
-     * @param y      起始位置左上角 y 坐标
-     * @param direct 移动方向
-     * @author lllllan
-     * @date 2021/10/5 0:33
-     */
     public BulletImpl(int x, int y, int direct, boolean isEnemy) {
         this.x = x;
         this.y = y;
@@ -125,27 +106,16 @@ public class BulletImpl implements Bullet {
         isLive = live;
     }
 
-    /**
-     * Desc: 子弹的绘制
-     *
-     * @param g 画笔
-     * @author lllllan
-     * @date 2021/10/5 0:23
-     */
-    public void paint(Graphics g) {
-        g.setColor(Color.black);
-        g.fillOval(x, y, SIZE, SIZE);
+    public void paint(Graphics g, ImageObserver observer) {
+        String s = "/img/bullet/" + (isEnemy ? "enemy" : "user") + ".gif";
+        URL url = BarrierImpl.class.getResource(s);
+        Image img = Toolkit.getDefaultToolkit().getImage(url);
+        g.drawImage(img, x, y, SIZE, SIZE, observer);
     }
 
-    /**
-     * Desc: 子弹的移动
-     *
-     * @author lllllan
-     * @date 2021/10/5 0:23
-     */
     public void move() {
         x += offsetX;
         y += offsetY;
     }
- 
+
 }

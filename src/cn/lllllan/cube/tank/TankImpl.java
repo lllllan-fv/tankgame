@@ -1,5 +1,7 @@
 package cn.lllllan.cube.tank;
 
+import cn.lllllan.bullet.BulletImpl;
+import cn.lllllan.bullet.EnemyBullet;
 import cn.lllllan.cube.Cube;
 import cn.lllllan.cube.barrier.BarrierImpl;
 
@@ -19,10 +21,7 @@ import java.net.URL;
 
 public class TankImpl extends Cube implements Tank, Runnable {
 
-    private static final String[][] urls = new String[][]{
-            {"/img/tank/user1/", "/img/tank/user2/"},
-            {"/img/tank/enemy1/", "/img/tank/enemy2/", "/img/tank/enemy3/"}
-    };
+    private static final int NUMBER = 4;
 
     private static final int SPEED = 25;
     private int direct;
@@ -32,8 +31,8 @@ public class TankImpl extends Cube implements Tank, Runnable {
      * 定义坦克的类型
      *
      * <ul>
-     *     <li>1 玩家坦克</li>
-     *     <li>2 敌人坦克</li>
+     *     <li>0 玩家坦克</li>
+     *     <li>1 敌人坦克</li>
      * </ul>
      */
     private int tankType;
@@ -42,15 +41,20 @@ public class TankImpl extends Cube implements Tank, Runnable {
     private String imgUrl;
     private Image img = null;
 
-    private boolean moving;
-    private int speed;
+    /**
+     * <ul>
+     *     <li>0 - 不动</li>
+     *     <li>1 - 转向</li>
+     *     <li>2 - 移动</li>
+     * </ul>
+     */
+    private int moving;
 
     public TankImpl(int tankType, int tankID, int x, int y) {
         super(x, y, true, false, false);
         this.tankType = tankType;
         this.tankID = tankID;
-        this.moving = false;
-        this.speed = SPEED;
+        this.moving = 0;
 
         setProperty();
     }
@@ -76,37 +80,23 @@ public class TankImpl extends Cube implements Tank, Runnable {
         isLive = live;
     }
 
-    public int getSpeed() {
-        return speed;
-    }
-
-    public void setSpeed(int speed) {
-        this.speed = speed;
-    }
-
-    /**
-     * Desc: 根据方向找到对应的坦克图片
-     *
-     * @author lllllan
-     * @date 2021/10/5 17:59
-     */
     private void setProperty() {
-        if (tankType == 0) return;
 
-        int type = Math.min(tankType - 1, urls.length - 1);
-        int id = Math.min(tankID, urls[type].length - 1);
-        imgUrl = urls[type][id];
+        int type = tankType % 2;
+        int id = tankID % NUMBER;
 
-        String imgurl = imgUrl + direct + ".gif";
+        imgUrl = "/img/tank/" + ((type == 0) ? "user" : "enemy") + "/" + id + "/";
+
+        String imgurl = imgUrl + direct + ".png";
         URL url = BarrierImpl.class.getResource(imgurl);
         img = Toolkit.getDefaultToolkit().getImage(url);
     }
 
-    public boolean isMoving() {
+    public int getMoving() {
         return moving;
     }
 
-    public void setMoving(boolean moving) {
+    public void setMoving(int moving) {
         this.moving = moving;
     }
 
@@ -119,6 +109,28 @@ public class TankImpl extends Cube implements Tank, Runnable {
         super.setY(y);
     }
 
+    public int[] getBulletCoordinate() {
+        int x, y;
+        if (direct == 0) {
+            x = super.getX() + super.getSIZE() / 2 - BulletImpl.getSIZE() / 2;
+            y = super.getY() - BulletImpl.getSIZE();
+        } else if (direct == 1) {
+            x = super.getX() + super.getSIZE();
+            y = super.getY() + super.getSIZE() / 2 - BulletImpl.getSIZE() / 2;
+        } else if (direct == 2) {
+            x = super.getX() + super.getSIZE() / 2 - BulletImpl.getSIZE() / 2;
+            y = super.getY() + super.getSIZE();
+        } else {
+            x = super.getX() - BulletImpl.getSIZE();
+            y = super.getY() + super.getSIZE() / 2 - BulletImpl.getSIZE() / 2;
+        }
+        return new int[]{x, y};
+    }
+
+    public BulletImpl shoot() {
+        int[] xy = getBulletCoordinate();
+        return new EnemyBullet(xy[0], xy[1], direct);
+    }
 
     public void paint(Graphics g, ImageObserver observer) {
         g.drawImage(img, super.getX(), super.getY(), super.getWidth(), super.getHeight(), observer);
@@ -126,10 +138,6 @@ public class TankImpl extends Cube implements Tank, Runnable {
 
     @Override
     public void run() {
-    }
-
-    @Override
-    public void paint(Graphics g) {
     }
 
     public void moveUp(int move) {

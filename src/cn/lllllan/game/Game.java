@@ -1,14 +1,11 @@
 package cn.lllllan.game;
 
-import cn.lllllan.cube.tank.UserTank;
 import cn.lllllan.cube.tank.UserTank1;
 import cn.lllllan.cube.tank.UserTank2;
-import cn.lllllan.stage.InitialStage;
-import cn.lllllan.stage.LevelStage;
-import cn.lllllan.stage.SelectStage;
-import cn.lllllan.stage.Stage;
+import cn.lllllan.stage.*;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.Vector;
@@ -23,22 +20,13 @@ import java.util.Vector;
 
 public class Game implements KeyListener {
 
-    /**
-     * 窗体
-     */
     private static JFrame jFrame;
-
-    /**
-     * 所有的阶段，包括初始界面和各个游戏关卡
-     */
     private static InitialStage initialStage;
-    private static SelectStage selectStage;
+    private static TankSelectStage tankSelectStage;
+    private static LevelSelectStage levelSelectStage;
     private static Vector<LevelStage> levels;
     private static Stage currentStage;
 
-    /**
-     * 当前的画板线程
-     */
     private static Thread stageThread;
 
     /**
@@ -46,11 +34,12 @@ public class Game implements KeyListener {
      *
      * <ul>
      *     <li>0 - initial stage</li>
-     *     <li>1 - select stage</li>
-     *     <li>2 - level stage</li>
+     *     <li>1 - tank select stage</li>
+     *     <li>2 - level select stage</li>
+     *     <li>3 - level stage</li>
      * </ul>
      */
-    private static final int MAX_INDEX = 2;
+    private static final int MAX_INDEX = 3;
     private static int stageIndex;
     private static int levelInedx;
 
@@ -64,11 +53,12 @@ public class Game implements KeyListener {
         levels.add(new LevelStage());
 
         initialStage = new InitialStage();
-        selectStage = new SelectStage();
+        tankSelectStage = new TankSelectStage();
+        levelSelectStage = new LevelSelectStage();
 
         stageIndex = levelInedx = 0;
         currentStage = initialStage;
-        selectStage.setMaxLevel(levels.size() - 1);
+        levelSelectStage.setMaxLevel(levels.size() - 1);
 
         stageThread = new Thread(currentStage);
         stageThread.start();
@@ -76,6 +66,11 @@ public class Game implements KeyListener {
         jFrame.add(currentStage);
         jFrame.addKeyListener(game);
         jFrame.setSize(1400, 800);
+        //设置窗口居中
+        Dimension screen = Toolkit.getDefaultToolkit().getScreenSize(); //获取屏幕的尺寸
+        jFrame.setLocation(screen.width / 2 - jFrame.getWidth() / 2, screen.height / 2 - jFrame.getHeight() / 2);
+        //设置窗口大小不可变
+        jFrame.setResizable(false);
         // 关闭窗口即结束程序
         jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         jFrame.setVisible(true);
@@ -90,9 +85,12 @@ public class Game implements KeyListener {
                 currentStage = initialStage;
                 break;
             case 1:
-                currentStage = selectStage;
+                currentStage = tankSelectStage;
                 break;
             case 2:
+                currentStage = levelSelectStage;
+                break;
+            case 3:
             default:
                 currentStage = levels.get(levelInedx);
                 break;
@@ -105,14 +103,6 @@ public class Game implements KeyListener {
         jFrame.setVisible(true);
     }
 
-    /**
-     * Desc: 进入下一个游戏阶段
-     *
-     * @param
-     * @return
-     * @author lllllan
-     * @date 2021/10/6 0:57
-     */
     public void nextStage() {
         System.out.println("nextStage " + stageIndex);
         if (stageIndex < MAX_INDEX) {
@@ -122,9 +112,17 @@ public class Game implements KeyListener {
         }
     }
 
-    public void setUserOfLevels(boolean flag) {
-        UserTank user1 = new UserTank1(0, 0);
-        UserTank user2 = flag ? new UserTank2(0, 0) : null;
+    public void setStageIndex(int stageIndex) {
+        if (stageIndex < MAX_INDEX) {
+            stageThread.interrupt();
+            this.stageIndex = stageIndex;
+            setProperty();
+        }
+    }
+
+    public void setUsersOfLevels(int[] users) {
+        UserTank1 user1 = users.length > 0 ? new UserTank1(users[0], 0, 0) : null;
+        UserTank2 user2 = users.length > 1 ? new UserTank2(users[1], 0, 0) : null;
 
         for (LevelStage level : levels) {
             level.setUserTanks(user1, user2);
@@ -145,12 +143,15 @@ public class Game implements KeyListener {
         // 如果在初始界面按下回车
         // 代表选好人数模式，为此创建相应数量的用户坦克，起始位置先不管
         if (stageIndex == 0 && e.getKeyCode() == KeyEvent.VK_ENTER) {
-            boolean flag = ((InitialStage) currentStage).getIndex() == 1;
-            setUserOfLevels(flag);
+            tankSelectStage.setUserNumber(initialStage.getIndex() + 1);
 
             nextStage();
         } else if (stageIndex == 1 && e.getKeyCode() == KeyEvent.VK_ENTER) {
-            levelInedx = selectStage.getLevel();
+            setUsersOfLevels(tankSelectStage.getIndex());
+
+            nextStage();
+        } else if (stageIndex == 2 && e.getKeyCode() == KeyEvent.VK_ENTER) {
+            levelInedx = levelSelectStage.getLevel();
 
             nextStage();
         }
@@ -159,5 +160,17 @@ public class Game implements KeyListener {
     @Override
     public void keyReleased(KeyEvent e) {
         currentStage.keyReleased(e);
+
+        if (e.getKeyCode() == KeyEvent.VK_F6 && stageIndex > 0) {
+            setStageIndex(0);
+        }
+
+        if (e.getKeyCode() == KeyEvent.VK_F7 && stageIndex > 1) {
+            setStageIndex(1);
+        }
+
+        if (e.getKeyCode() == KeyEvent.VK_F8 && stageIndex > 2) {
+            setStageIndex(2);
+        }
     }
 }

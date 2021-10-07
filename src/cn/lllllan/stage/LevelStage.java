@@ -1,9 +1,11 @@
 package cn.lllllan.stage;
 
+import cn.lllllan.bullet.Bullet;
 import cn.lllllan.bullet.BulletImpl;
 import cn.lllllan.cube.Cube;
 import cn.lllllan.cube.barrier.*;
 import cn.lllllan.cube.tank.EnemyTank;
+import cn.lllllan.cube.tank.TankImpl;
 import cn.lllllan.cube.tank.UserTank;
 
 import java.awt.*;
@@ -23,12 +25,11 @@ public class LevelStage extends Stage implements Runnable {
     private static final int WIDTH = 1100;
     private static final int HEIGHT = 700;
 
-    private static final int[][] COORDINATES = new int[][]{
-            {1180, 550}, {1180, 600}, {1180, 650}, {1180, 700},
-    };
-
+    private static final int TIPS_X = 1180;
+    private static final int TIPS_Y = 500;
+    private static final int TIPS_HEIGHT = 50;
     private static final String[] TIPS = new String[]{
-            "Space 暂停", "F5 重新开始", "F6 重选关卡", "F7 重选模式"
+            "Space 暂停", "F5 重新开始", "F6 重选人数", "F7 重选样式", "F8 重选关卡"
     };
 
     private Vector<BarrierImpl> barriers;
@@ -43,7 +44,6 @@ public class LevelStage extends Stage implements Runnable {
         enemyTanks = new Vector<>();
         bullets = new Vector<>();
 
-        // 边框
         int add = BarrierImpl.getSIZE();
         for (int col = 0; col <= HEIGHT; col += add) {
             barriers.add(new StellBarrier(0, col));
@@ -61,6 +61,18 @@ public class LevelStage extends Stage implements Runnable {
             barriers.add(new GrassBarrier(7 * add, col));
         }
 
+        for (int i = 0; i < 4; ++i) {
+            EnemyTank enemyTank = new EnemyTank(i, 400 + i * 100, 100);
+            enemyTank.setDirect(i);
+            enemyTanks.add(enemyTank);
+            bullets.add(enemyTank.shoot());
+
+            UserTank userTank = new UserTank(i, 400 + i * 100, 200);
+            userTank.setDirect(i);
+            bullets.add(userTank.shoot());
+        }
+
+
     }
 
     public void setUserTanks(UserTank user1, UserTank user2) {
@@ -71,156 +83,212 @@ public class LevelStage extends Stage implements Runnable {
         if (user2 != null) user2.setCoordination(200, 100);
     }
 
-    public int calculateDistanceOfUserTankToOtherCubes(UserTank user, Cube cube) {
+    public int calculateDistanceOfTankToOtherCubes(TankImpl tank, Cube cube) {
         int ans = Integer.MAX_VALUE;
 
-        if (cube.isCanTankPass()) return ans;
+        if (cube == null || cube.isCanTankPass() || tank == cube) return ans;
 
-        int direct = user.getDirect();
+        int direct = tank.getDirect();
 
-        if (direct == 0 && user.getY() >= cube.getY() + cube.getHeight()) {
+        if (direct == 0 && tank.getY() >= cube.getY() + cube.getHeight()) {
 
-            if (!(cube.getX() >= user.getX() + user.getWidth() || cube.getX() + cube.getWidth() <= user.getX())) {
-                ans = Math.min(ans, user.getY() - (cube.getY() + cube.getHeight()));
+            if (!(cube.getX() >= tank.getX() + tank.getWidth() || cube.getX() + cube.getWidth() <= tank.getX())) {
+                ans = Math.min(ans, tank.getY() - (cube.getY() + cube.getHeight()));
             }
 
-        } else if (direct == 1 && cube.getX() >= user.getX() + user.getWidth()) {
+        } else if (direct == 1 && cube.getX() >= tank.getX() + tank.getWidth()) {
 
-            if (!(cube.getY() >= user.getY() + user.getHeight() || cube.getY() + cube.getHeight() <= user.getY())) {
-                ans = Math.min(ans, cube.getX() - (user.getX() + user.getWidth()));
+            if (!(cube.getY() >= tank.getY() + tank.getHeight() || cube.getY() + cube.getHeight() <= tank.getY())) {
+                ans = Math.min(ans, cube.getX() - (tank.getX() + tank.getWidth()));
             }
 
-        } else if (direct == 2 && cube.getY() >= user.getY() + user.getHeight()) {
+        } else if (direct == 2 && cube.getY() >= tank.getY() + tank.getHeight()) {
 
-            if (!(cube.getX() >= user.getX() + user.getWidth() || cube.getX() + cube.getWidth() <= user.getX())) {
-                ans = Math.min(ans, cube.getY() - (user.getY() + user.getHeight()));
+            if (!(cube.getX() >= tank.getX() + tank.getWidth() || cube.getX() + cube.getWidth() <= tank.getX())) {
+                ans = Math.min(ans, cube.getY() - (tank.getY() + tank.getHeight()));
             }
 
-        } else if (direct == 3 && user.getX() >= cube.getX() + cube.getWidth()) {
+        } else if (direct == 3 && tank.getX() >= cube.getX() + cube.getWidth()) {
 
-            if (!(cube.getY() >= user.getY() + user.getHeight() || cube.getY() + cube.getHeight() <= user.getY())) {
-                ans = Math.min(ans, user.getX() - (cube.getX() + cube.getWidth()));
+            if (!(cube.getY() >= tank.getY() + tank.getHeight() || cube.getY() + cube.getHeight() <= tank.getY())) {
+                ans = Math.min(ans, tank.getX() - (cube.getX() + cube.getWidth()));
             }
 
         }
 
         if (ans == 0) {
-            System.out.println("user: " + user.getX() + " " + user.getY());
+            System.out.println("tank: " + tank.getX() + " " + tank.getY());
             System.out.println("cube: " + cube.getX() + " " + cube.getY());
         }
 
         return ans;
     }
 
-    public void userTankMove(UserTank user, int direct) {
-        if (user == null || direct == -1) return;
+    public int longestDistanceOfTankCanMove(TankImpl tank) {
+        int direct = tank.getDirect();
+        int distance = Integer.MAX_VALUE;
 
-        if (user.getDirect() != direct) {
+        distance = Math.min(distance, calculateDistanceOfTankToOtherCubes(tank, user1));
+        distance = Math.min(distance, calculateDistanceOfTankToOtherCubes(tank, user2));
 
-            user.setDirect(direct);
+        for (EnemyTank enemyTank : enemyTanks) {
+            distance = Math.min(distance, calculateDistanceOfTankToOtherCubes(tank, enemyTank));
+        }
+
+        for (BarrierImpl barrier : barriers) {
+            distance = Math.min(distance, calculateDistanceOfTankToOtherCubes(tank, barrier));
+        }
+
+        if (direct == 0) {
+
+            distance = Math.min(distance, tank.getY() - Cube.getSIZE());
+
+        } else if (direct == 1) {
+
+            distance = Math.min(distance, WIDTH - (tank.getX() + tank.getWidth()));
+
+        } else if (direct == 2) {
+
+            distance = Math.min(distance, HEIGHT - -(tank.getY() + tank.getHeight()));
 
         } else {
 
-            int speed = user.getSPEED();
+            distance = Math.min(distance, tank.getX() - Cube.getSIZE());
 
-            if (user1 != null && user != user1) {
-                speed = Math.min(speed, calculateDistanceOfUserTankToOtherCubes(user, user1));
-            }
-
-            if (user2 != null && user != user2) {
-                speed = Math.min(speed, calculateDistanceOfUserTankToOtherCubes(user, user2));
-            }
-
-            for (EnemyTank enemyTank : enemyTanks) {
-                speed = Math.min(speed, calculateDistanceOfUserTankToOtherCubes(user, enemyTank));
-            }
-
-            for (BarrierImpl barrier : barriers) {
-                speed = Math.min(speed, calculateDistanceOfUserTankToOtherCubes(user, barrier));
-            }
-
-            if (direct == 0) {
-
-                speed = Math.min(speed, user.getY() - Cube.getSIZE());
-
-            } else if (direct == 1) {
-
-                speed = Math.min(speed, WIDTH - (user.getX() + user.getWidth()));
-
-            } else if (direct == 2) {
-
-                speed = Math.min(speed, HEIGHT - -(user.getY() + user.getHeight()));
-
-            } else {
-
-                speed = Math.min(speed, user.getX() - Cube.getSIZE());
-
-            }
-
-            System.out.println("speed = " + speed);
-
-            user.setSpeed(speed);
-
-            switch (direct) {
-                case 0:
-                    user.moveUp(speed);
-                    break;
-                case 1:
-                    user.moveRight(speed);
-                    break;
-                case 2:
-                    user.moveDown(speed);
-                    break;
-                case 3:
-                    user.moveLeft(speed);
-                    break;
-            }
-        }
-    }
-
-    public void user1Move(KeyEvent e) {
-        if (user1 == null) return;
-
-        switch (e.getKeyCode()) {
-            case KeyEvent.VK_W:
-                userTankMove(user1, 0);
-                break;
-            case KeyEvent.VK_D:
-                userTankMove(user1, 1);
-                break;
-            case KeyEvent.VK_S:
-                userTankMove(user1, 2);
-                break;
-            case KeyEvent.VK_A:
-                userTankMove(user1, 3);
-                break;
-            default:
-                break;
         }
 
+        return distance;
     }
 
-    public void user2Move(KeyEvent e) {
-        if (user2 == null) return;
+    public void userTankMove(UserTank user) {
+        if (user == null || user.getMoving() == 0) return;
 
-        switch (e.getKeyCode()) {
-            case KeyEvent.VK_UP:
-                userTankMove(user2, 0);
+        if (user.getMoving() == 1) {
+            user.keepMoving();
+            return;
+        }
+
+        int direct = user.getDirect();
+        int speed = Math.min(user.getSPEED(), longestDistanceOfTankCanMove(user));
+
+        System.out.println("speed = " + speed);
+
+        switch (direct) {
+            case 0:
+                user.moveUp(speed);
                 break;
-            case KeyEvent.VK_RIGHT:
-                userTankMove(user2, 1);
+            case 1:
+                user.moveRight(speed);
                 break;
-            case KeyEvent.VK_DOWN:
-                userTankMove(user2, 2);
+            case 2:
+                user.moveDown(speed);
                 break;
-            case KeyEvent.VK_LEFT:
-                userTankMove(user2, 3);
-                break;
-            default:
+            case 3:
+                user.moveLeft(speed);
                 break;
         }
     }
 
+
+    public void startMoving(UserTank user, int direct) {
+        if (user.getDirect() != direct) {
+            user.setDirect(direct);
+            user.changeDirect();
+        } else {
+            user.startMoving();
+        }
+    }
+
+    public void enemyTankMove(EnemyTank tank) {
+    }
+
+    public void enemyTanksMove() {
+        for (EnemyTank enemyTank : enemyTanks) {
+            if (enemyTank == null) enemyTanks.remove(enemyTank);
+            else enemyTankMove(enemyTank);
+        }
+    }
+
+    public Cube isBulletHitCube(BulletImpl bullet) {
+
+        return null;
+    }
+
+    public void destroyBulletsAndTanks() {
+        for (BulletImpl bullet : bullets) {
+//            Cube cube =
+        }
+    }
+
+    public void userTankShoot(UserTank user) {
+        BulletImpl shoot = user.shoot();
+        if (shoot != null) bullets.add(shoot);
+    }
+
+    public void bulletMove(BulletImpl bullet) {
+        bullet.move();
+    }
+
+    public void bulletsMove() {
+        for (BulletImpl bullet : bullets) {
+            if (bullet == null) bullets.remove(bullet);
+            else bulletMove(bullet);
+        }
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {
+    }
+
+    private boolean[][] moveEvent = new boolean[2][5];
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+        System.out.println(e.getKeyCode() + "press");
+
+        int direct;
+
+        if (user1 != null && (direct = user1.getDirect(e)) != -1) {
+            moveEvent[0][direct] = true;
+            startMoving(user1, direct);
+        }
+
+        if (user2 != null && (direct = user2.getDirect(e)) != -1) {
+            moveEvent[1][direct] = true;
+            startMoving(user2, direct);
+        }
+
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+        System.out.println(e.getKeyCode() + "releas");
+
+        int direct;
+
+        if (user1 != null) {
+            if ((direct = user1.getDirect(e)) != -1) {
+                moveEvent[0][direct] = false;
+                boolean moveFlag = false;
+                for (int i = 0; i < 4; ++i) moveFlag |= moveEvent[0][i];
+                if (!moveFlag) user1.stopMoving();
+            } else if (e.getKeyCode() == KeyEvent.VK_J) {
+                userTankShoot(user1);
+            }
+        }
+
+        if (user2 != null) {
+            if ((direct = user2.getDirect(e)) != -1) {
+                moveEvent[1][direct] = false;
+                boolean moveFlag = false;
+                for (int i = 0; i < 4; ++i) moveFlag |= moveEvent[1][i];
+                if (!moveFlag) user2.stopMoving();
+            } else if (e.getKeyCode() == KeyEvent.VK_NUMPAD1) {
+                userTankShoot(user2);
+            }
+        }
+
+    }
 
     @Override
     public void paint(Graphics g) {
@@ -239,31 +307,21 @@ public class LevelStage extends Stage implements Runnable {
     public void run() {
         while (true) {
             try {
-                Thread.sleep(50);
+                Thread.sleep(100);
             } catch (InterruptedException e) {
                 System.out.println("level InterruptedException");
                 break;
             }
 
+            enemyTanksMove();
+            userTankMove(user1);
+            userTankMove(user2);
+            bulletsMove();
+
+//            System.out.println(Thread.currentThread().getName());
             this.repaint();
         }
     }
-
-    @Override
-    public void keyTyped(KeyEvent e) {
-    }
-
-    @Override
-    public void keyPressed(KeyEvent e) {
-        user1Move(e);
-        user2Move(e);
-    }
-
-    @Override
-    public void keyReleased(KeyEvent e) {
-        System.out.println(e.getKeyCode() + "releas");
-    }
-
 
     public void paintSplitLine(Graphics g) {
         g.setColor(Color.white);
@@ -273,10 +331,12 @@ public class LevelStage extends Stage implements Runnable {
     public void paintTips(Graphics g) {
         g.setColor(Color.WHITE);
         g.setFont(new Font("隶书", Font.BOLD, 30));
+
+        int x = TIPS_X;
+        int y = TIPS_Y;
         for (int i = 0; i < TIPS.length; ++i) {
-            int x = COORDINATES[i][0];
-            int y = COORDINATES[i][1];
-            g.drawString(TIPS[i], COORDINATES[i][0], COORDINATES[i][1]);
+            y += TIPS_HEIGHT;
+            g.drawString(TIPS[i], x, y);
         }
     }
 
@@ -292,6 +352,9 @@ public class LevelStage extends Stage implements Runnable {
     }
 
     public void paintBullets(Graphics g) {
+        for (Bullet bullet : bullets) {
+            bullet.paint(g, this);
+        }
     }
 
     public void paintBarriers(Graphics g) {
