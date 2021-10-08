@@ -70,14 +70,10 @@ public class LevelStage extends Stage implements Runnable {
         }
 
         for (int i = 0; i < 4; ++i) {
-            EnemyTank enemyTank = new EnemyTank(i, 400 + i * 100, 100);
-            enemyTank.setDirect(i);
+            EnemyTank enemyTank = new EnemyTank(i, i * 100 + 400, 100);
+            enemyTank.setDirect(i + 3);
             enemyTanks.add(enemyTank);
             bullets.add(enemyTank.shoot());
-
-            UserTank userTank = new UserTank(i, 400 + i * 100, 200);
-            userTank.setDirect(i);
-            bullets.add(userTank.shoot());
         }
     }
 
@@ -197,6 +193,10 @@ public class LevelStage extends Stage implements Runnable {
         }
     }
 
+    public void userTanksMove() {
+        if (user1 != null) userTankMove(user1);
+        if (user2 != null) userTankMove(user2);
+    }
 
     public void startMoving(UserTank user, int direct) {
         if (user.getDirect() != direct) {
@@ -212,25 +212,8 @@ public class LevelStage extends Stage implements Runnable {
 
     public void enemyTanksMove() {
         for (EnemyTank enemyTank : enemyTanks) {
-            if (enemyTank == null) enemyTanks.remove(enemyTank);
-            else enemyTankMove(enemyTank);
+            enemyTankMove(enemyTank);
         }
-    }
-
-    public Cube isBulletHitCube(BulletImpl bullet) {
-
-        return null;
-    }
-
-    public void destroyBulletsAndTanks() {
-        for (BulletImpl bullet : bullets) {
-//            Cube cube =
-        }
-    }
-
-    public void userTankShoot(UserTank user) {
-        BulletImpl shoot = user.shoot();
-        if (shoot != null) bullets.add(shoot);
     }
 
     public void bulletMove(BulletImpl bullet) {
@@ -239,9 +222,177 @@ public class LevelStage extends Stage implements Runnable {
 
     public void bulletsMove() {
         for (BulletImpl bullet : bullets) {
-            if (bullet == null) bullets.remove(bullet);
-            else bulletMove(bullet);
+            bulletMove(bullet);
         }
+    }
+
+    /**
+     * @param bullet
+     * @param cube
+     * @return <ul>
+     * <li>-1 - 可以穿过</li>
+     * <li>0 - 不可穿过，但只是擦边</li>
+     * <li>1 - 不可穿过，会造成伤害</li>
+     * <li>2 - 不可穿过，但不会造成伤害</li>
+     * </ul>
+     */
+    public int isBulletHitCube(BulletImpl bullet, Cube cube) {
+        // 草丛、河流等，子弹可以穿过
+        if (cube == null || cube.isCanBulletPass()) return -1;
+
+        int direct = bullet.getDirect();
+
+        int x = (bullet.getX() + bullet.getWIDTH()) / bullet.getSPEED() * bullet.getSPEED();
+        int y = (bullet.getY() + bullet.getHEIGHT()) / bullet.getSPEED() * bullet.getSPEED();
+
+        if (direct == 0 || direct == 2) {
+
+            if (cube.getY() <= y + bullet.getHEIGHT() && y <= cube.getY() + cube.getHeight()) {
+
+                // 擦边
+                if (x == cube.getX() || x == cube.getX() + cube.getWidth()) {
+                    // 子弹可以从坦克边上擦过、坦克中间擦过、坦克和墙体之间擦过
+                    return cube.isTank() ? -1 : 0;
+                }
+                // 撞击
+                else if (cube.getX() < x && x < cube.getX() + cube.getWidth()) {
+                    if (cube.isCanBeBorken()) {
+
+                        if (cube.isTank()) {
+
+                            if (cube == user1 || cube == user2) {
+
+                                if (bullet.isEnemy()) return 1;
+                                else if (((TankImpl) cube).isBulletBelongTo(bullet)) return -1;
+                                else return 1;
+
+                            } else {
+
+                                if (!bullet.isEnemy()) return 1;
+                                else if (((TankImpl) cube).isBulletBelongTo(bullet)) return -1;
+                                return 2;
+
+                            }
+
+                        } else return 1;
+
+                    } else return 2;
+                }
+
+            }
+
+        } else {
+
+            if (cube.getX() <= x + bullet.getWIDTH() && x <= cube.getX() + cube.getWidth()) {
+
+                // 擦边
+                if (y == cube.getY() || y == cube.getY() + cube.getHeight()) {
+                    return cube.isTank() ? -1 : 0;
+                }
+                // 撞击
+                else if (cube.getY() < y && y < cube.getY() + cube.getHeight()) {
+                    if (cube.isCanBeBorken()) {
+
+                        if (cube.isTank()) {
+
+                            if (cube == user1 || cube == user2) {
+
+                                if (bullet.isEnemy()) return 1;
+                                else if (((TankImpl) cube).isBulletBelongTo(bullet)) return -1;
+                                else return 1;
+
+                            } else {
+
+                                if (!bullet.isEnemy()) return 1;
+                                else if (((TankImpl) cube).isBulletBelongTo(bullet)) return -1;
+                                return 2;
+
+                            }
+
+                        } else return 1;
+
+                    } else return 2;
+                }
+
+            }
+
+        }
+
+        return -1;
+    }
+
+    public Cube isBulletHitCube(int type, Cube cube) {
+        if (type == 2) return new StellBarrier(0, 0);
+        if (type == 1) return cube;
+        return null;
+    }
+
+    public Cube isBulletHitCube(BulletImpl bullet) {
+        // 擦边标记
+        boolean flag = false;
+        Cube cube;
+
+        if (user1 != null) {
+            int type = isBulletHitCube(bullet, user1);
+            if ((cube = isBulletHitCube(type, user1)) != null) return cube;
+        }
+        if (user2 != null) {
+            int type = isBulletHitCube(bullet, user2);
+            if ((cube = isBulletHitCube(type, user2)) != null) return cube;
+        }
+
+        for (BarrierImpl barrier : barriers) {
+            int type = isBulletHitCube(bullet, barrier);
+
+            if ((cube = isBulletHitCube(type, barrier)) != null) return cube;
+            if (type == 0) {
+                if (flag) return new StellBarrier(0, 0);
+                flag = true;
+            }
+        }
+
+        for (EnemyTank enemyTank : enemyTanks) {
+            int type = isBulletHitCube(bullet, enemyTank);
+            if ((cube = isBulletHitCube(type, enemyTank)) != null) return cube;
+        }
+
+        return null;
+    }
+
+
+    public void destroy() {
+        Vector<BulletImpl> del = new Vector<>();
+
+        for (BulletImpl bullet : bullets) {
+            Cube cube = isBulletHitCube(bullet);
+
+            if (cube == null) continue;
+
+            if (cube == user1) user1 = null;
+            else if (cube == user2) user2 = null;
+            else if (cube.isTank()) enemyTanks.remove(cube);
+            else barriers.remove(cube);
+
+            if (!bullet.isEnemy()) {
+                if (user1 != null) user1.destroyBullet(bullet);
+                if (user2 != null) user1.destroyBullet(bullet);
+            } else {
+                for (EnemyTank enemyTank : enemyTanks) {
+                    enemyTank.destroyBullet(bullet);
+                }
+            }
+
+            del.add(bullet);
+        }
+
+        for (BulletImpl bullet : del) {
+            bullets.remove(bullet);
+        }
+    }
+
+    public void userTankShoot(UserTank user) {
+        BulletImpl shoot = user.shoot();
+        if (shoot != null) bullets.add(shoot);
     }
 
     @Override
@@ -298,6 +449,32 @@ public class LevelStage extends Stage implements Runnable {
 
     }
 
+    boolean moveFlag = true;
+
+    @Override
+    public void run() {
+        while (true) {
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                System.out.println("level InterruptedException");
+                break;
+            }
+
+            destroy();
+            bulletsMove();
+
+            if (moveFlag) {
+                enemyTanksMove();
+                userTanksMove();
+            }
+
+            moveFlag ^= true;
+
+            this.repaint();
+        }
+    }
+
     @Override
     public void paint(Graphics g) {
         super.paint(g);
@@ -309,26 +486,6 @@ public class LevelStage extends Stage implements Runnable {
         paintEnemyTanks(g);
         paintBarriers(g);
         paintBullets(g);
-    }
-
-    @Override
-    public void run() {
-        while (true) {
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                System.out.println("level InterruptedException");
-                break;
-            }
-
-            enemyTanksMove();
-            userTankMove(user1);
-            userTankMove(user2);
-            bulletsMove();
-
-//            System.out.println(Thread.currentThread().getName());
-            this.repaint();
-        }
     }
 
     public void paintSplitLine(Graphics g) {

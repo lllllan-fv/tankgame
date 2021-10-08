@@ -1,13 +1,14 @@
 package cn.lllllan.cube.tank;
 
 import cn.lllllan.bullet.BulletImpl;
-import cn.lllllan.bullet.EnemyBullet;
+import cn.lllllan.bullet.UserBullet;
 import cn.lllllan.cube.Cube;
 import cn.lllllan.cube.barrier.BarrierImpl;
 
 import java.awt.*;
 import java.awt.image.ImageObserver;
 import java.net.URL;
+import java.util.Vector;
 
 /**
  * 坦克基类的升级版，提供图片的绘制
@@ -22,10 +23,12 @@ import java.net.URL;
 public class TankImpl extends Cube implements Tank, Runnable {
 
     private static final int NUMBER = 4;
-
     private static final int SPEED = 25;
+    private static final int MAX_BULLETS_NUMBER = 5;
     private int direct;
     private boolean isLive;
+
+    private Vector<BulletImpl> bullets;
 
     /**
      * 定义坦克的类型
@@ -51,12 +54,43 @@ public class TankImpl extends Cube implements Tank, Runnable {
     private int moving;
 
     public TankImpl(int tankType, int tankID, int x, int y) {
-        super(x, y, true, false, false);
+        super(x, y, true, true, false, false);
         this.tankType = tankType;
         this.tankID = tankID;
         this.moving = 0;
-
+        bullets = new Vector<>();
         setProperty();
+    }
+
+    public static int getMaxBulletsNumber() {
+        return MAX_BULLETS_NUMBER;
+    }
+
+    public boolean canShoot() {
+        return bullets.size() < MAX_BULLETS_NUMBER;
+    }
+
+    public void addBullet(BulletImpl bullet) {
+        bullets.add(bullet);
+    }
+
+    public BulletImpl shoot() {
+        if (canShoot()) {
+            int[] xy = getBulletCoordinate();
+            UserBullet userBullet = new UserBullet(xy[0], xy[1], direct);
+            addBullet(userBullet);
+            return userBullet;
+        }
+        return null;
+    }
+
+    public void destroyBullet(BulletImpl bullet) {
+        if (bullets.contains(bullet))
+            bullets.remove(bullet);
+    }
+
+    public boolean isBulletBelongTo(BulletImpl bullet) {
+        return bullets.contains(bullet);
     }
 
     public static int getSPEED() {
@@ -68,7 +102,7 @@ public class TankImpl extends Cube implements Tank, Runnable {
     }
 
     public void setDirect(int direct) {
-        this.direct = direct;
+        this.direct = direct % NUMBER;
         setProperty();
     }
 
@@ -125,11 +159,6 @@ public class TankImpl extends Cube implements Tank, Runnable {
             y = super.getY() + super.getSIZE() / 2 - BulletImpl.getSIZE() / 2;
         }
         return new int[]{x, y};
-    }
-
-    public BulletImpl shoot() {
-        int[] xy = getBulletCoordinate();
-        return new EnemyBullet(xy[0], xy[1], direct);
     }
 
     public void paint(Graphics g, ImageObserver observer) {

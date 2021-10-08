@@ -113,6 +113,7 @@ public class Game implements KeyListener {
             case 3:
             default:
                 currentStage = levels.get(levelInedx);
+                // 每到一个信的关卡、F5 重新开始，需要重新赋予两只坦克并恢复初始状态
                 setUsersOfLevel((LevelStage) currentStage, getUserTanks());
                 break;
         }
@@ -124,21 +125,16 @@ public class Game implements KeyListener {
         jFrame.setVisible(true);
     }
 
-    public void nextStage() {
-        System.out.println("nextStage " + stageIndex);
-        if (stageIndex < MAX_INDEX) {
-            stageThread.interrupt();
-            stageIndex++;
-            setProperty();
-        }
-    }
-
     public void setStageIndex(int stageIndex) {
         if (stageIndex <= MAX_INDEX) {
             stageThread.interrupt();
             this.stageIndex = stageIndex;
             setProperty();
         }
+    }
+
+    public void nextStage() {
+        setStageIndex(stageIndex + 1);
     }
 
     @Override
@@ -152,8 +148,6 @@ public class Game implements KeyListener {
 
         System.out.println(e.getKeyCode());
 
-        // 如果在初始界面按下回车
-        // 代表选好人数模式，为此创建相应数量的用户坦克，起始位置先不管
         if (stageIndex == 0 && e.getKeyCode() == KeyEvent.VK_ENTER) {
             tankSelectStage.setUserNumber(initialStage.getIndex() + 1);
 

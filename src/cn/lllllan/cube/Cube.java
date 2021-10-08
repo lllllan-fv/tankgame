@@ -16,13 +16,15 @@ public class Cube {
     private int x;
     private int y;
 
+    private boolean isTank;
     private boolean canBeBorken;
     private boolean canTankPass;
     private boolean canBulletPass;
 
-    public Cube(int x, int y, boolean canBeBorken, boolean canTankPass, boolean canBulletPass) {
+    public Cube(int x, int y, boolean isTank, boolean canBeBorken, boolean canTankPass, boolean canBulletPass) {
         this.x = x;
         this.y = y;
+        this.isTank = isTank;
         this.canBeBorken = canBeBorken;
         this.canTankPass = canTankPass;
         this.canBulletPass = canBulletPass;
@@ -32,6 +34,10 @@ public class Cube {
         this.canBeBorken = canBeBorken;
         this.canTankPass = canTankPass;
         this.canBulletPass = canBulletPass;
+    }
+
+    public boolean isTank() {
+        return isTank;
     }
 
     public boolean isCanBeBorken() {

@@ -17,13 +17,13 @@ import java.net.URL;
 @SuppressWarnings({"all"})
 
 public class BarrierImpl extends Cube implements Barrier {
- 
+
     private String imgUrl = "/img/barrier/walls.gif";
     private Image img = null;
     private int barrierType;
 
     public BarrierImpl(int x, int y, int barrierType) {
-        super(x, y, true, false, false);
+        super(x, y, false, true, false, false);
         this.barrierType = barrierType;
 
         setProperty();
