@@ -44,6 +44,14 @@ public class LevelStage extends Stage implements Runnable {
         enemyTanks = new Vector<>();
         bullets = new Vector<>();
 
+        init();
+    }
+
+    public void init() {
+        barriers.clear();
+        enemyTanks.clear();
+        bullets.clear();
+
         int add = BarrierImpl.getSIZE();
         for (int col = 0; col <= HEIGHT; col += add) {
             barriers.add(new StellBarrier(0, col));
@@ -71,13 +79,13 @@ public class LevelStage extends Stage implements Runnable {
             userTank.setDirect(i);
             bullets.add(userTank.shoot());
         }
-
-
     }
 
-    public void setUserTanks(UserTank user1, UserTank user2) {
-        this.user1 = user1;
-        this.user2 = user2;
+    public void setUserTanks(UserTank[] users) {
+        this.user1 = users[0];
+        this.user2 = users[1];
+
+        init();
 
         if (user1 != null) user1.setCoordination(100, 100);
         if (user2 != null) user2.setCoordination(200, 100);

@@ -19,7 +19,7 @@ import java.net.URL;
 public class BulletImpl implements Bullet {
 
     private static final int SIZE = 5;
-    private static final int SPEED = 25;
+    private static final int SPEED = 50;
 
     private int x;
     private int y;

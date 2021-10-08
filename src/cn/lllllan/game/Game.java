@@ -1,5 +1,6 @@
 package cn.lllllan.game;
 
+import cn.lllllan.cube.tank.UserTank;
 import cn.lllllan.cube.tank.UserTank1;
 import cn.lllllan.cube.tank.UserTank2;
 import cn.lllllan.stage.*;
@@ -76,6 +77,25 @@ public class Game implements KeyListener {
         jFrame.setVisible(true);
     }
 
+    public UserTank[] getUserTanks() {
+        int[] users = tankSelectStage.getIndex();
+        UserTank1 user1 = users.length > 0 ? new UserTank1(users[0], 0, 0) : null;
+        UserTank2 user2 = users.length > 1 ? new UserTank2(users[1], 0, 0) : null;
+        return new UserTank[]{user1, user2};
+    }
+
+    public void setUsersOfLevel(LevelStage level, UserTank[] users) {
+        level.setUserTanks(users);
+    }
+
+    public void setUsersOfLevels() {
+        UserTank[] users = getUserTanks();
+
+        for (LevelStage level : levels) {
+            setUsersOfLevel(level, users);
+        }
+    }
+
     public void setProperty() {
         // !!!! 删除上一个画板，避免留在窗体的底部
         jFrame.remove(currentStage);
@@ -93,6 +113,7 @@ public class Game implements KeyListener {
             case 3:
             default:
                 currentStage = levels.get(levelInedx);
+                setUsersOfLevel((LevelStage) currentStage, getUserTanks());
                 break;
         }
 
@@ -113,19 +134,10 @@ public class Game implements KeyListener {
     }
 
     public void setStageIndex(int stageIndex) {
-        if (stageIndex < MAX_INDEX) {
+        if (stageIndex <= MAX_INDEX) {
             stageThread.interrupt();
             this.stageIndex = stageIndex;
             setProperty();
-        }
-    }
-
-    public void setUsersOfLevels(int[] users) {
-        UserTank1 user1 = users.length > 0 ? new UserTank1(users[0], 0, 0) : null;
-        UserTank2 user2 = users.length > 1 ? new UserTank2(users[1], 0, 0) : null;
-
-        for (LevelStage level : levels) {
-            level.setUserTanks(user1, user2);
         }
     }
 
@@ -147,7 +159,7 @@ public class Game implements KeyListener {
 
             nextStage();
         } else if (stageIndex == 1 && e.getKeyCode() == KeyEvent.VK_ENTER) {
-            setUsersOfLevels(tankSelectStage.getIndex());
+            setUsersOfLevels();
 
             nextStage();
         } else if (stageIndex == 2 && e.getKeyCode() == KeyEvent.VK_ENTER) {
@@ -160,6 +172,10 @@ public class Game implements KeyListener {
     @Override
     public void keyReleased(KeyEvent e) {
         currentStage.keyReleased(e);
+
+        if (e.getKeyCode() == KeyEvent.VK_F5 && stageIndex == 3) {
+            setStageIndex(3);
+        }
 
         if (e.getKeyCode() == KeyEvent.VK_F6 && stageIndex > 0) {
             setStageIndex(0);
