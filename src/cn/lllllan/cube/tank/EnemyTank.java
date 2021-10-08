@@ -15,13 +15,14 @@ public class EnemyTank extends TankImpl implements Tank {
 
     public EnemyTank(int tankID, int x, int y) {
         super(1, tankID, x, y);
+        super.setLife(tankID + 5);
     }
 
     @Override
     public BulletImpl shoot() {
         if (canShoot()) {
             int[] xy = getBulletCoordinate();
-            EnemyBullet enemyBullet = new EnemyBullet(xy[0], xy[1], super.getDirect());
+            EnemyBullet enemyBullet = new EnemyBullet(xy[0], xy[1], super.getDirect(), this);
             super.addBullet(enemyBullet);
             return enemyBullet;
         }

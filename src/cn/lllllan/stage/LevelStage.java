@@ -63,14 +63,14 @@ public class LevelStage extends Stage implements Runnable {
             barriers.add(new StellBarrier(row, HEIGHT + add));
         }
 
-        for (int col = 3 * add; col <= 10 * add; col += 2 * add) {
+        for (int col = 3 * add; col <= 10 * add; col += add) {
             barriers.add(new WallBarrier(3 * add, col));
             barriers.add(new WaterBarrier(5 * add, col));
             barriers.add(new GrassBarrier(7 * add, col));
         }
 
         for (int i = 0; i < 4; ++i) {
-            EnemyTank enemyTank = new EnemyTank(i, i * 100 + 400, 100);
+            EnemyTank enemyTank = new EnemyTank(i, i * 50 + 400, 100);
             enemyTank.setDirect(i + 3);
             enemyTanks.add(enemyTank);
             bullets.add(enemyTank.shoot());
@@ -260,19 +260,11 @@ public class LevelStage extends Stage implements Runnable {
 
                         if (cube.isTank()) {
 
-                            if (cube == user1 || cube == user2) {
-
-                                if (bullet.isEnemy()) return 1;
-                                else if (((TankImpl) cube).isBulletBelongTo(bullet)) return -1;
-                                else return 1;
-
-                            } else {
-
-                                if (!bullet.isEnemy()) return 1;
-                                else if (((TankImpl) cube).isBulletBelongTo(bullet)) return -1;
+                            if (bullet.getBelong() == cube) {
+                                return -1;
+                            } else if (bullet.isEnemy() && ((TankImpl) cube).isEnemy()) {
                                 return 2;
-
-                            }
+                            } else return 1;
 
                         } else return 1;
 
@@ -295,19 +287,11 @@ public class LevelStage extends Stage implements Runnable {
 
                         if (cube.isTank()) {
 
-                            if (cube == user1 || cube == user2) {
-
-                                if (bullet.isEnemy()) return 1;
-                                else if (((TankImpl) cube).isBulletBelongTo(bullet)) return -1;
-                                else return 1;
-
-                            } else {
-
-                                if (!bullet.isEnemy()) return 1;
-                                else if (((TankImpl) cube).isBulletBelongTo(bullet)) return -1;
+                            if (bullet.getBelong() == cube) {
+                                return -1;
+                            } else if (bullet.isEnemy() && ((TankImpl) cube).isEnemy()) {
                                 return 2;
-
-                            }
+                            } else return 1;
 
                         } else return 1;
 
@@ -359,6 +343,23 @@ public class LevelStage extends Stage implements Runnable {
         return null;
     }
 
+    public void destroyUserTank(UserTank userTank) {
+        userTank.lifeDown();
+        if (userTank.getLife() == 0) {
+            if (userTank == user1) user1 = null;
+            if (userTank == user2) user2 = null;
+        }
+    }
+
+    public void destroyEnemyTank(EnemyTank enemyTank) {
+        enemyTank.lifeDown();
+        if (enemyTank.getLife() == 0) enemyTanks.remove(enemyTank);
+    }
+
+    public void destroyBarriee(BarrierImpl barrier) {
+        barrier.lifeDown();
+        if (barrier.getLife() == 0) barriers.remove(barrier);
+    }
 
     public void destroy() {
         Vector<BulletImpl> del = new Vector<>();
@@ -368,20 +369,12 @@ public class LevelStage extends Stage implements Runnable {
 
             if (cube == null) continue;
 
-            if (cube == user1) user1 = null;
-            else if (cube == user2) user2 = null;
-            else if (cube.isTank()) enemyTanks.remove(cube);
-            else barriers.remove(cube);
+            if (cube == user1 || cube == user2) destroyUserTank((UserTank) cube);
+            else if (cube.isTank()) destroyEnemyTank((EnemyTank) cube);
+            else destroyBarriee((BarrierImpl) cube);
 
-            if (!bullet.isEnemy()) {
-                if (user1 != null) user1.destroyBullet(bullet);
-                if (user2 != null) user1.destroyBullet(bullet);
-            } else {
-                for (EnemyTank enemyTank : enemyTanks) {
-                    enemyTank.destroyBullet(bullet);
-                }
-            }
-
+            TankImpl tank = bullet.getBelong();
+            tank.destroyBullet(bullet);
             del.add(bullet);
         }
 

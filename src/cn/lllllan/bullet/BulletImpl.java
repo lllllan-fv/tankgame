@@ -1,6 +1,7 @@
 package cn.lllllan.bullet;
 
 import cn.lllllan.cube.barrier.BarrierImpl;
+import cn.lllllan.cube.tank.TankImpl;
 
 import java.awt.*;
 import java.awt.image.ImageObserver;
@@ -27,15 +28,15 @@ public class BulletImpl implements Bullet {
     private int offsetX;
     private int offsetY;
 
-    private boolean isLive;
+    private TankImpl belong;
     private boolean isEnemy;
 
-    public BulletImpl(int x, int y, int direct, boolean isEnemy) {
+    public BulletImpl(int x, int y, int direct, TankImpl belong, boolean isEnemy) {
         this.x = x;
         this.y = y;
         this.direct = direct;
+        this.belong = belong;
         this.isEnemy = isEnemy;
-        this.isLive = true;
 
         // 根据方向设置偏移量 offsetX, offsetY
         switch (direct) {
@@ -74,6 +75,10 @@ public class BulletImpl implements Bullet {
         return SPEED;
     }
 
+    public TankImpl getBelong() {
+        return belong;
+    }
+
     public int getX() {
         return x;
     }
@@ -94,16 +99,8 @@ public class BulletImpl implements Bullet {
         return offsetY;
     }
 
-    public boolean isLive() {
-        return isLive;
-    }
-
     public boolean isEnemy() {
         return isEnemy;
-    }
-
-    public void setLive(boolean live) {
-        isLive = live;
     }
 
     public void paint(Graphics g, ImageObserver observer) {

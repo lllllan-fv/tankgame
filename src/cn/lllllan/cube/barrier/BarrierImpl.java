@@ -25,7 +25,7 @@ public class BarrierImpl extends Cube implements Barrier {
     public BarrierImpl(int x, int y, int barrierType) {
         super(x, y, false, true, false, false);
         this.barrierType = barrierType;
-
+        super.setLife(5);
         setProperty();
     }
 

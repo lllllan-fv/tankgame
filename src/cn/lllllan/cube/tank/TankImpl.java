@@ -24,7 +24,7 @@ public class TankImpl extends Cube implements Tank, Runnable {
 
     private static final int NUMBER = 4;
     private static final int SPEED = 25;
-    private static final int MAX_BULLETS_NUMBER = 5;
+    private static final int MAX_BULLETS_NUMBER = 3;
     private int direct;
     private boolean isLive;
 
@@ -59,6 +59,8 @@ public class TankImpl extends Cube implements Tank, Runnable {
         this.tankID = tankID;
         this.moving = 0;
         bullets = new Vector<>();
+
+        super.setLife(5);
         setProperty();
     }
 
@@ -70,6 +72,10 @@ public class TankImpl extends Cube implements Tank, Runnable {
         return bullets.size() < MAX_BULLETS_NUMBER;
     }
 
+    public boolean isEnemy() {
+        return tankType == 1;
+    }
+
     public void addBullet(BulletImpl bullet) {
         bullets.add(bullet);
     }
@@ -77,7 +83,7 @@ public class TankImpl extends Cube implements Tank, Runnable {
     public BulletImpl shoot() {
         if (canShoot()) {
             int[] xy = getBulletCoordinate();
-            UserBullet userBullet = new UserBullet(xy[0], xy[1], direct);
+            UserBullet userBullet = new UserBullet(xy[0], xy[1], direct, this);
             addBullet(userBullet);
             return userBullet;
         }
