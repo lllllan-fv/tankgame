@@ -76,12 +76,20 @@ public class LevelStage extends Stage implements Runnable {
             barriers.add(new GrassBarrier(7 * add, col));
         }
 
-        for (int i = 0; i < 8; ++i) {
+        for (int i = 0; i < 1; ++i) {
             EnemyTank enemyTank = new EnemyTank(i, i * 50 + 400, 100);
             enemyTank.setDirect(i + 3);
             enemyTanks.add(enemyTank);
             bullets.add(enemyTank.shoot());
         }
+    }
+
+    public boolean isOver() {
+        return enemyTanks.size() == 0;
+    }
+
+    public boolean isLive() {
+        return (user1 != null || user2 != null);
     }
 
     public void setUserTanks(UserTank[] users) {

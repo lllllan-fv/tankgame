@@ -19,12 +19,14 @@ import java.util.Vector;
 
 @SuppressWarnings({"all"})
 
-public class Game implements KeyListener {
+public class Game implements KeyListener, Runnable {
 
     private static JFrame jFrame;
     private static InitialStage initialStage;
     private static TankSelectStage tankSelectStage;
     private static LevelSelectStage levelSelectStage;
+    private static WinStage winStage;
+    private static LoseStage loseStage;
     private static Vector<LevelStage> levels;
     private static Stage currentStage;
 
@@ -40,7 +42,7 @@ public class Game implements KeyListener {
      *     <li>3 - level stage</li>
      * </ul>
      */
-    private static final int MAX_INDEX = 3;
+    private static final int MAX_INDEX = 5;
     private static int stageIndex;
     private static int levelInedx;
 
@@ -49,6 +51,7 @@ public class Game implements KeyListener {
         jFrame = new JFrame();
         // 键盘监听
         Game game = new Game();
+        new Thread(game).start();
 
         levels = new Vector<>();
         levels.add(new LevelStage());
@@ -56,6 +59,8 @@ public class Game implements KeyListener {
         initialStage = new InitialStage();
         tankSelectStage = new TankSelectStage();
         levelSelectStage = new LevelSelectStage();
+        winStage = new WinStage();
+        loseStage = new LoseStage();
 
         stageIndex = levelInedx = 0;
         currentStage = initialStage;
@@ -111,10 +116,16 @@ public class Game implements KeyListener {
                 currentStage = levelSelectStage;
                 break;
             case 3:
-            default:
                 currentStage = levels.get(levelInedx);
                 // 每到一个信的关卡、F5 重新开始，需要重新赋予两只坦克并恢复初始状态
                 setUsersOfLevel((LevelStage) currentStage, getUserTanks());
+                break;
+            case 4:
+                currentStage = winStage;
+                break;
+            case 5:
+            default:
+                currentStage = loseStage;
                 break;
         }
 
@@ -181,6 +192,42 @@ public class Game implements KeyListener {
 
         if (e.getKeyCode() == KeyEvent.VK_F8 && stageIndex > 2) {
             setStageIndex(2);
+        }
+
+        if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+            if (stageIndex == 4) {
+                if (levelInedx < levels.size() - 1) {
+                    levelInedx++;
+                    setStageIndex(3);
+                } else {
+                    setStageIndex(0);
+                }
+            }
+
+            if (stageIndex == 5) {
+                setStageIndex(3);
+            }
+        }
+    }
+
+    @Override
+    public void run() {
+        while (true) {
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            if (stageIndex == 3) {
+                if (((LevelStage) currentStage).isOver()) {
+                    setStageIndex(4);
+                } else if (!((LevelStage) currentStage).isLive()) {
+                    setStageIndex(5);
+                }
+            }
+
+//            System.out.println(Thread.currentThread().getName());
         }
     }
 }

@@ -28,6 +28,15 @@ public class Stage extends JPanel implements Runnable {
 
     @Override
     public void run() {
+        while (true) {
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                System.out.println("InterruptedException");
+                break;
+            }
 
+            this.repaint();
+        }
     }
 }
