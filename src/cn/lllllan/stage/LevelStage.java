@@ -25,6 +25,10 @@ public class LevelStage extends Stage implements Runnable {
     private static final int WIDTH = 1100;
     private static final int HEIGHT = 700;
 
+    private static final int INFO_X = 1180;
+    private static final int INFO_Y = 50;
+    private static final int INFO_HEIGHT = 50;
+
     private static final int TIPS_X = 1180;
     private static final int TIPS_Y = 500;
     private static final int TIPS_HEIGHT = 50;
@@ -38,6 +42,9 @@ public class LevelStage extends Stage implements Runnable {
 
     private UserTank user1;
     private UserTank user2;
+
+    private int user1Kill;
+    private int user2Kill;
 
     public LevelStage() {
         barriers = new Vector<>();
@@ -83,8 +90,8 @@ public class LevelStage extends Stage implements Runnable {
 
         init();
 
-        if (user1 != null) user1.setCoordination(100, 100);
-        if (user2 != null) user2.setCoordination(200, 100);
+        if (user1 != null) user1.setCoordinate(100, 300);
+        if (user2 != null) user2.setCoordinate(200, 200);
     }
 
     public int calculateDistanceOfTankToOtherCubes(TankImpl tank, Cube cube) {
@@ -118,11 +125,6 @@ public class LevelStage extends Stage implements Runnable {
                 ans = Math.min(ans, tank.getX() - (cube.getX() + cube.getWidth()));
             }
 
-        }
-
-        if (ans == 0) {
-            System.out.println("tank: " + tank.getX() + " " + tank.getY());
-            System.out.println("cube: " + cube.getX() + " " + cube.getY());
         }
 
         return ans;
@@ -234,17 +236,64 @@ public class LevelStage extends Stage implements Runnable {
         return ans;
     }
 
+    public boolean isUserTankInGrass(UserTank userTank) {
+        boolean leftTop = false;
+        boolean leftBottom = false;
+        boolean rightTop = false;
+        boolean rightBottom = false;
+
+        for (BarrierImpl barrier : barriers) {
+            if (barrier.isCanTankPass()) {
+
+                if (barrier.getX() + barrier.getWidth() / 2 == userTank.getX()
+                        || barrier.getX() == userTank.getX()) {
+
+                    if (barrier.getY() + barrier.getHeight() / 2 == userTank.getY()) {
+                        leftTop = true;
+                    }
+
+                    if (barrier.getY() == userTank.getY()) {
+                        leftTop = leftBottom = true;
+                    }
+
+                    if (userTank.getY() + userTank.getHeight() / 2 == barrier.getY()) {
+                        leftBottom = true;
+                    }
+                }
+
+                if (barrier.getX() == userTank.getX()
+                        || userTank.getX() + userTank.getWidth() / 2 == barrier.getX()) {
+
+                    if (barrier.getY() + barrier.getHeight() / 2 == userTank.getY()) {
+                        rightTop = true;
+                    }
+
+                    if (barrier.getY() == userTank.getY()) {
+                        rightTop = rightBottom = true;
+                    }
+
+                    if (userTank.getY() + userTank.getHeight() / 2 == barrier.getY()) {
+                        rightBottom = true;
+                    }
+                }
+
+            }
+        }
+
+        return leftTop && leftBottom && rightTop && rightBottom;
+    }
+
     public int[] getDirectionOfUserTanks(EnemyTank enemyTank) {
         int[] ans = new int[4];
 
         if (enemyTank == null) return ans;
 
-        if (user1 != null) {
+        if (user1 != null && (!isUserTankInGrass(user1) || user1.getBulletsNumber() > 0)) {
             int[] tem = getDirectionOfUserTank(enemyTank, user1);
             for (int i = 0; i < ans.length; ++i) ans[i] |= tem[i];
         }
 
-        if (user2 != null) {
+        if (user2 != null && (!isUserTankInGrass(user2) || user2.getBulletsNumber() > 0)) {
             int[] tem = getDirectionOfUserTank(enemyTank, user2);
             for (int i = 0; i < ans.length; ++i) ans[i] |= tem[i];
         }
@@ -369,6 +418,7 @@ public class LevelStage extends Stage implements Runnable {
     }
 
     public Cube isBulletHitCube(BulletImpl bullet) {
+        if (bullet == null) return null;
         // 擦边标记
         boolean flag = false;
         Cube cube;
@@ -413,7 +463,18 @@ public class LevelStage extends Stage implements Runnable {
         if (enemyTank.getLife() == 0) enemyTanks.remove(enemyTank);
     }
 
-    public void destroyBarriee(BarrierImpl barrier) {
+    public void bulletHitEnemyTank(BulletImpl bullet, EnemyTank enemyTank) {
+        destroyEnemyTank(enemyTank);
+
+        if (enemyTank.getLife() == 0) {
+            TankImpl tank = bullet.getBelong();
+
+            if (tank == user1) user1Kill++;
+            else if (tank == user2) user2Kill++;
+        }
+    }
+
+    public void destroyBarrier(BarrierImpl barrier) {
         barrier.lifeDown();
         if (barrier.getLife() == 0) barriers.remove(barrier);
     }
@@ -422,14 +483,18 @@ public class LevelStage extends Stage implements Runnable {
         Vector<BulletImpl> del = new Vector<>();
 
         for (BulletImpl bullet : bullets) {
+            if (bullet == null) {
+                del.add(bullet);
+                continue;
+            }
             Cube cube = isBulletHitCube(bullet);
 
             if (cube == null) continue;
 
             if (cube.isTank()) {
-                if (((TankImpl) cube).isEnemy()) destroyEnemyTank((EnemyTank) cube);
+                if (((TankImpl) cube).isEnemy()) bulletHitEnemyTank(bullet, (EnemyTank) cube);
                 else destroyUserTank((UserTank) cube);
-            } else destroyBarriee((BarrierImpl) cube);
+            } else destroyBarrier((BarrierImpl) cube);
 
             TankImpl tank = bullet.getBelong();
             tank.destroyBullet(bullet);
@@ -526,7 +591,7 @@ public class LevelStage extends Stage implements Runnable {
         super.paint(g);
 
         paintSplitLine(g);
-        paintTips(g);
+        paintTipsAndInfo(g);
 
         paintUserTanks(g);
         paintEnemyTanks(g);
@@ -539,7 +604,7 @@ public class LevelStage extends Stage implements Runnable {
         g.fillRect(1150, 0, 10, 800);
     }
 
-    public void paintTips(Graphics g) {
+    public void paintTipsAndInfo(Graphics g) {
         g.setColor(Color.WHITE);
         g.setFont(new Font("隶书", Font.BOLD, 30));
 
@@ -549,6 +614,15 @@ public class LevelStage extends Stage implements Runnable {
             y += TIPS_HEIGHT;
             g.drawString(TIPS[i], x, y);
         }
+
+        int user1Life = user1 == null ? 0 : user1.getLife();
+        int user2Life = user2 == null ? 0 : user2.getLife();
+        g.drawString("User1", INFO_X, INFO_Y);
+        g.drawString("  HP: " + user1Life, INFO_X, INFO_Y + INFO_HEIGHT);
+        g.drawString("  Kill: " + user1Kill, INFO_X, INFO_Y + 2 * INFO_HEIGHT);
+        g.drawString("User2", INFO_X, INFO_Y + 3 * INFO_HEIGHT);
+        g.drawString("  HP: " + user2Life, INFO_X, INFO_Y + 4 * INFO_HEIGHT);
+        g.drawString("  Kill: " + user2Kill, INFO_X, INFO_Y + 5 * INFO_HEIGHT);
     }
 
     public void paintUserTanks(Graphics g) {
@@ -564,6 +638,7 @@ public class LevelStage extends Stage implements Runnable {
 
     public void paintBullets(Graphics g) {
         for (Bullet bullet : bullets) {
+            if (bullet == null) continue;
             bullet.paint(g, this);
         }
     }

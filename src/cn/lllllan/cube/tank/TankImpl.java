@@ -20,11 +20,11 @@ import java.util.Vector;
 
 @SuppressWarnings({"all"})
 
-public class TankImpl extends Cube implements Tank, Runnable {
+public class TankImpl extends Cube implements Tank {
 
     private static final int NUMBER = 4;
     private static final int SPEED = 25;
-    private static final int MAX_BULLETS_NUMBER = 3;
+    private int MAX_BULLETS_NUMBER = 3;
     private int direct;
     private boolean isLive;
 
@@ -64,12 +64,20 @@ public class TankImpl extends Cube implements Tank, Runnable {
         setProperty();
     }
 
-    public static int getMaxBulletsNumber() {
+    public void setMAX_BULLETS_NUMBER(int MAX_BULLETS_NUMBER) {
+        this.MAX_BULLETS_NUMBER = MAX_BULLETS_NUMBER;
+    }
+
+    public int getMaxBulletsNumber() {
         return MAX_BULLETS_NUMBER;
     }
 
     public boolean canShoot() {
         return bullets.size() < MAX_BULLETS_NUMBER;
+    }
+
+    public int getBulletsNumber() {
+        return bullets.size();
     }
 
     public boolean isEnemy() {
@@ -144,7 +152,7 @@ public class TankImpl extends Cube implements Tank, Runnable {
         return tankID;
     }
 
-    public void setCoordination(int x, int y) {
+    public void setCoordinate(int x, int y) {
         super.setX(x);
         super.setY(y);
     }
@@ -169,10 +177,6 @@ public class TankImpl extends Cube implements Tank, Runnable {
 
     public void paint(Graphics g, ImageObserver observer) {
         g.drawImage(img, super.getX(), super.getY(), super.getWidth(), super.getHeight(), observer);
-    }
-
-    @Override
-    public void run() {
     }
 
     public void moveUp(int move) {
