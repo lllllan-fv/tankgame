@@ -11,7 +11,7 @@ import java.awt.event.KeyEvent;
 @SuppressWarnings({"all"})
 
 public class UserTank extends TankImpl implements Tank {
-    
+
     public UserTank(int tankID, int x, int y) {
         super(0, tankID, x, y);
         super.setLife(5);
@@ -33,7 +33,7 @@ public class UserTank extends TankImpl implements Tank {
         super.setMoving(0);
     }
 
-    public void changeDirect() {
+    public void turning() {
         super.setMoving(1);
     }
 }

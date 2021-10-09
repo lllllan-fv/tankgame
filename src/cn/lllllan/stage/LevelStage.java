@@ -69,7 +69,7 @@ public class LevelStage extends Stage implements Runnable {
             barriers.add(new GrassBarrier(7 * add, col));
         }
 
-        for (int i = 0; i < 4; ++i) {
+        for (int i = 0; i < 8; ++i) {
             EnemyTank enemyTank = new EnemyTank(i, i * 50 + 400, 100);
             enemyTank.setDirect(i + 3);
             enemyTanks.add(enemyTank);
@@ -164,33 +164,37 @@ public class LevelStage extends Stage implements Runnable {
         return distance;
     }
 
-    public void userTankMove(UserTank user) {
-        if (user == null || user.getMoving() == 0) return;
-
-        if (user.getMoving() == 1) {
-            user.keepMoving();
-            return;
-        }
-
-        int direct = user.getDirect();
-        int speed = Math.min(user.getSPEED(), longestDistanceOfTankCanMove(user));
-
-        System.out.println("speed = " + speed);
+    public boolean tankImplMove(TankImpl tank) {
+        int direct = tank.getDirect();
+        int speed = Math.min(tank.getSPEED(), longestDistanceOfTankCanMove(tank));
 
         switch (direct) {
             case 0:
-                user.moveUp(speed);
+                tank.moveUp(speed);
                 break;
             case 1:
-                user.moveRight(speed);
+                tank.moveRight(speed);
                 break;
             case 2:
-                user.moveDown(speed);
+                tank.moveDown(speed);
                 break;
             case 3:
-                user.moveLeft(speed);
+                tank.moveLeft(speed);
                 break;
         }
+
+        return speed > 0;
+    }
+
+    public void userTankMove(UserTank userTank) {
+        if (userTank == null || userTank.getMoving() == 0) return;
+
+        if (userTank.getMoving() == 1) {
+            userTank.keepMoving();
+            return;
+        }
+
+        tankImplMove(userTank);
     }
 
     public void userTanksMove() {
@@ -198,21 +202,74 @@ public class LevelStage extends Stage implements Runnable {
         if (user2 != null) userTankMove(user2);
     }
 
-    public void startMoving(UserTank user, int direct) {
-        if (user.getDirect() != direct) {
-            user.setDirect(direct);
-            user.changeDirect();
+    public void startMoving(UserTank userTank, int direct) {
+        if (userTank.getDirect() != direct) {
+            userTank.setDirect(direct);
+            userTank.turning();
         } else {
-            user.startMoving();
+            userTank.startMoving();
         }
     }
 
-    public void enemyTankMove(EnemyTank tank) {
+    public void enemyTankMove(EnemyTank enemyTank) {
+        if (enemyTank.keepMoving()) {
+            if (!enemyTank.turning()) {
+                if (!tankImplMove(enemyTank)) {
+                    enemyTank.forcedTurn();
+                }
+            }
+        }
     }
 
-    public void enemyTanksMove() {
+    public int[] getDirectionOfUserTank(EnemyTank enemyTank, UserTank userTank) {
+        int[] ans = new int[4];
+        if (enemyTank == null || userTank == null) return ans;
+
+        if (userTank.getX() + userTank.getWidth() < enemyTank.getX()) ans[3] = 1;
+        else if (enemyTank.getX() + enemyTank.getWidth() < userTank.getX()) ans[1] = 1;
+
+        if (userTank.getY() + userTank.getHeight() < enemyTank.getY()) ans[0] = 1;
+        else if (enemyTank.getY() + enemyTank.getHeight() < userTank.getY()) ans[2] = 1;
+
+        return ans;
+    }
+
+    public int[] getDirectionOfUserTanks(EnemyTank enemyTank) {
+        int[] ans = new int[4];
+
+        if (enemyTank == null) return ans;
+
+        if (user1 != null) {
+            int[] tem = getDirectionOfUserTank(enemyTank, user1);
+            for (int i = 0; i < ans.length; ++i) ans[i] |= tem[i];
+        }
+
+        if (user2 != null) {
+            int[] tem = getDirectionOfUserTank(enemyTank, user2);
+            for (int i = 0; i < ans.length; ++i) ans[i] |= tem[i];
+        }
+
+        return ans;
+    }
+
+    public void enemyTankShoot(EnemyTank enemyTank) {
+        int[] directions = getDirectionOfUserTanks(enemyTank);
+        int direct = enemyTank.getDirect();
+
+        if (directions[direct] > 0) {
+            tankShoot(enemyTank);
+        }
+    }
+
+    public void tankShoot(TankImpl user) {
+        BulletImpl shoot = user.shoot();
+        if (shoot != null) bullets.add(shoot);
+    }
+
+    public void enemyTanksMoveAndShoot() {
         for (EnemyTank enemyTank : enemyTanks) {
             enemyTankMove(enemyTank);
+            enemyTankShoot(enemyTank);
         }
     }
 
@@ -369,9 +426,10 @@ public class LevelStage extends Stage implements Runnable {
 
             if (cube == null) continue;
 
-            if (cube == user1 || cube == user2) destroyUserTank((UserTank) cube);
-            else if (cube.isTank()) destroyEnemyTank((EnemyTank) cube);
-            else destroyBarriee((BarrierImpl) cube);
+            if (cube.isTank()) {
+                if (((TankImpl) cube).isEnemy()) destroyEnemyTank((EnemyTank) cube);
+                else destroyUserTank((UserTank) cube);
+            } else destroyBarriee((BarrierImpl) cube);
 
             TankImpl tank = bullet.getBelong();
             tank.destroyBullet(bullet);
@@ -381,11 +439,6 @@ public class LevelStage extends Stage implements Runnable {
         for (BulletImpl bullet : del) {
             bullets.remove(bullet);
         }
-    }
-
-    public void userTankShoot(UserTank user) {
-        BulletImpl shoot = user.shoot();
-        if (shoot != null) bullets.add(shoot);
     }
 
     @Override
@@ -425,7 +478,7 @@ public class LevelStage extends Stage implements Runnable {
                 for (int i = 0; i < 4; ++i) moveFlag |= moveEvent[0][i];
                 if (!moveFlag) user1.stopMoving();
             } else if (e.getKeyCode() == KeyEvent.VK_J) {
-                userTankShoot(user1);
+                tankShoot(user1);
             }
         }
 
@@ -436,13 +489,13 @@ public class LevelStage extends Stage implements Runnable {
                 for (int i = 0; i < 4; ++i) moveFlag |= moveEvent[1][i];
                 if (!moveFlag) user2.stopMoving();
             } else if (e.getKeyCode() == KeyEvent.VK_NUMPAD1) {
-                userTankShoot(user2);
+                tankShoot(user2);
             }
         }
 
     }
 
-    boolean moveFlag = true;
+    private boolean moveFlag = true;
 
     @Override
     public void run() {
@@ -458,7 +511,7 @@ public class LevelStage extends Stage implements Runnable {
             bulletsMove();
 
             if (moveFlag) {
-                enemyTanksMove();
+                enemyTanksMoveAndShoot();
                 userTanksMove();
             }
 
@@ -475,7 +528,7 @@ public class LevelStage extends Stage implements Runnable {
         paintSplitLine(g);
         paintTips(g);
 
-        paintUsers(g);
+        paintUserTanks(g);
         paintEnemyTanks(g);
         paintBarriers(g);
         paintBullets(g);
@@ -498,7 +551,7 @@ public class LevelStage extends Stage implements Runnable {
         }
     }
 
-    public void paintUsers(Graphics g) {
+    public void paintUserTanks(Graphics g) {
         if (user1 != null) user1.paint(g, this);
         if (user2 != null) user2.paint(g, this);
     }
