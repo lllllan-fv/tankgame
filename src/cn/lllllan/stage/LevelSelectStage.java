@@ -13,11 +13,32 @@ import java.awt.event.KeyEvent;
 
 public class LevelSelectStage extends Stage implements Runnable {
 
-    private int maxLevel;
+    private static final int MAX_TOTAL_NUMBER = 8;
+
+    private int activeNumber;
+    private int totalNumber;
+
     private int level;
 
-    public void setMaxLevel(int maxLevel) {
-        this.maxLevel = maxLevel;
+    public LevelSelectStage(int totalNumber) {
+        level = 1;
+        this.totalNumber = Math.min(totalNumber, MAX_TOTAL_NUMBER);
+    }
+
+    public int getTotalNumber() {
+        return totalNumber;
+    }
+
+    public int getActiveNumber() {
+        return activeNumber;
+    }
+
+    public void setActiveNumber(int activeNumber) {
+        this.activeNumber = Math.min(activeNumber, totalNumber);
+    }
+
+    public void setMoreActiveNumber(int activeNumber) {
+        setActiveNumber(Math.max(activeNumber, this.activeNumber));
     }
 
     public int getLevel() {
@@ -27,17 +48,18 @@ public class LevelSelectStage extends Stage implements Runnable {
     @Override
     public void paint(Graphics g) {
         super.paint(g);
-
+ 
         int x = 150, y = 200;
         g.setFont(new Font("隶书", Font.BOLD, 80));
         for (int i = 0; i < 2; ++i) {
             for (int j = 0; j < 4; ++j) {
-                g.setColor((i * 4 + j == level) ? Color.yellow : Color.white);
-                if (i * 4 + j > maxLevel) g.setColor(Color.GRAY);
+                if (i * 4 + j + 1 > totalNumber) break;
+                g.setColor((i * 4 + j + 1 == level) ? Color.yellow : Color.white);
+                if (i * 4 + j + 1 > activeNumber) g.setColor(Color.GRAY);
 
                 g.fillRoundRect(x + j * 300, y + i * 200, 200, 150, 10, 10);
 
-                g.setColor((i * 4 + j == level) ? Color.red : Color.black);
+                g.setColor((i * 4 + j + 1 == level) ? Color.red : Color.black);
                 g.drawString("" + (4 * i + j + 1), x + j * 300 + 80, y + i * 200 + 100);
             }
         }
@@ -48,18 +70,17 @@ public class LevelSelectStage extends Stage implements Runnable {
     }
 
     public void keyDown() {
-        if (level + 4 <= maxLevel) level += 4;
+        if (level + 4 <= activeNumber) level += 4;
     }
 
     public void keyLeft() {
-        if (level == 4) {
-            level = 3;
-        } else if (level > 0) level--;
+        if (level == 5) level = 4;
+        else if (level > 1) level--;
     }
 
     public void keyRight() {
-        if (level == 3 && maxLevel > 3) level = 4;
-        else if (level < maxLevel) level++;
+        if (level == 3 && activeNumber > 3) level = 4;
+        else if (level < activeNumber) level++;
     }
 
     @Override

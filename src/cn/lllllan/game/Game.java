@@ -3,6 +3,8 @@ package cn.lllllan.game;
 import cn.lllllan.cube.tank.UserTank;
 import cn.lllllan.cube.tank.UserTank1;
 import cn.lllllan.cube.tank.UserTank2;
+import cn.lllllan.data.Data1;
+import cn.lllllan.data.Data2;
 import cn.lllllan.stage.*;
 
 import javax.swing.*;
@@ -27,6 +29,7 @@ public class Game implements KeyListener, Runnable {
     private static LevelSelectStage levelSelectStage;
     private static WinStage winStage;
     private static LoseStage loseStage;
+    private static EndStage endStage;
     private static Vector<LevelStage> levels;
     private static Stage currentStage;
 
@@ -42,7 +45,7 @@ public class Game implements KeyListener, Runnable {
      *     <li>3 - level stage</li>
      * </ul>
      */
-    private static final int MAX_INDEX = 5;
+    private static final int MAX_INDEX = 6;
     private static int stageIndex;
     private static int levelInedx;
 
@@ -54,17 +57,19 @@ public class Game implements KeyListener, Runnable {
         new Thread(game).start();
 
         levels = new Vector<>();
-        levels.add(new LevelStage());
+        levels.add(new LevelStage(new Data1()));
+        levels.add(new LevelStage(new Data2()));
 
         initialStage = new InitialStage();
         tankSelectStage = new TankSelectStage();
-        levelSelectStage = new LevelSelectStage();
+        levelSelectStage = new LevelSelectStage(levels.size());
         winStage = new WinStage();
         loseStage = new LoseStage();
+        endStage = new EndStage();
 
         stageIndex = levelInedx = 0;
         currentStage = initialStage;
-        levelSelectStage.setMaxLevel(levels.size() - 1);
+        levelSelectStage.setActiveNumber(1);
 
         stageThread = new Thread(currentStage);
         stageThread.start();
@@ -89,15 +94,15 @@ public class Game implements KeyListener, Runnable {
         return new UserTank[]{user1, user2};
     }
 
-    public void setUsersOfLevel(LevelStage level, UserTank[] users) {
-        level.setUserTanks(users);
+    public void levelReInit(LevelStage level, UserTank[] users) {
+        level.reInit(users);
     }
 
     public void setUsersOfLevels() {
         UserTank[] users = getUserTanks();
 
         for (LevelStage level : levels) {
-            setUsersOfLevel(level, users);
+            levelReInit(level, users);
         }
     }
 
@@ -116,17 +121,21 @@ public class Game implements KeyListener, Runnable {
                 currentStage = levelSelectStage;
                 break;
             case 3:
-                currentStage = levels.get(levelInedx);
+                LevelStage level = levels.get(levelInedx);
                 // 每到一个信的关卡、F5 重新开始，需要重新赋予两只坦克并恢复初始状态
-                setUsersOfLevel((LevelStage) currentStage, getUserTanks());
+                levelReInit(level, getUserTanks());
+                currentStage = level;
                 break;
             case 4:
                 currentStage = winStage;
                 break;
             case 5:
-            default:
                 currentStage = loseStage;
                 break;
+            case 6:
+                currentStage = endStage;
+                break;
+            default:
         }
 
         stageThread = new Thread(currentStage);
@@ -156,58 +165,44 @@ public class Game implements KeyListener, Runnable {
     @Override
     public void keyPressed(KeyEvent e) {
         currentStage.keyPressed(e);
-
-        System.out.println(e.getKeyCode());
-
-        if (stageIndex == 0 && e.getKeyCode() == KeyEvent.VK_ENTER) {
-            tankSelectStage.setUserNumber(initialStage.getIndex() + 1);
-
-            nextStage();
-        } else if (stageIndex == 1 && e.getKeyCode() == KeyEvent.VK_ENTER) {
-            setUsersOfLevels();
-
-            nextStage();
-        } else if (stageIndex == 2 && e.getKeyCode() == KeyEvent.VK_ENTER) {
-            levelInedx = levelSelectStage.getLevel();
-
-            nextStage();
-        }
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
         currentStage.keyReleased(e);
 
-        if (e.getKeyCode() == KeyEvent.VK_F5 && stageIndex == 3) {
+        if (e.getKeyCode() == KeyEvent.VK_SPACE && stageIndex == 3) {
+            ((LevelStage) currentStage).stop();
+        } else if (e.getKeyCode() == KeyEvent.VK_F5 && stageIndex == 3) {
             setStageIndex(3);
-        }
-
-        if (e.getKeyCode() == KeyEvent.VK_F6 && stageIndex > 0) {
+        } else if (e.getKeyCode() == KeyEvent.VK_F6 && stageIndex > 0) {
             setStageIndex(0);
-        }
-
-        if (e.getKeyCode() == KeyEvent.VK_F7 && stageIndex > 1) {
+        } else if (e.getKeyCode() == KeyEvent.VK_F7 && stageIndex > 1) {
             setStageIndex(1);
-        }
-
-        if (e.getKeyCode() == KeyEvent.VK_F8 && stageIndex > 2) {
+        } else if (e.getKeyCode() == KeyEvent.VK_F8 && stageIndex > 2) {
             setStageIndex(2);
-        }
+        } else {
+            if ((stageIndex == 4 || stageIndex == 5) && e.getKeyCode() == KeyEvent.VK_ENTER) {
+                setStageIndex(3);
+            } else if (stageIndex == 6) {
+                setStageIndex(0);
+            } else {
+                if (stageIndex == 0 && e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    tankSelectStage.setUserNumber(initialStage.getIndex() + 1);
 
-        if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-            if (stageIndex == 4) {
-                if (levelInedx < levels.size() - 1) {
-                    levelInedx++;
-                    setStageIndex(3);
-                } else {
-                    setStageIndex(0);
+                    nextStage();
+                } else if (stageIndex == 1 && e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    setUsersOfLevels();
+
+                    nextStage();
+                } else if (stageIndex == 2 && e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    levelInedx = levelSelectStage.getLevel() - 1;
+
+                    nextStage();
                 }
             }
-
-            if (stageIndex == 5) {
-                setStageIndex(3);
-            }
         }
+
     }
 
     @Override
@@ -221,7 +216,14 @@ public class Game implements KeyListener, Runnable {
 
             if (stageIndex == 3) {
                 if (((LevelStage) currentStage).isOver()) {
-                    setStageIndex(4);
+                    int nxt = levelInedx + 1;
+                    if (nxt < levelSelectStage.getTotalNumber()) {
+                        levelInedx++;
+                        levelSelectStage.setMoreActiveNumber(levelInedx + 1);
+                        setStageIndex(4);
+                    } else {
+                        setStageIndex(6);
+                    }
                 } else if (!((LevelStage) currentStage).isLive()) {
                     setStageIndex(5);
                 }
