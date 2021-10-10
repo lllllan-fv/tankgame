@@ -9,6 +9,8 @@ import cn.lllllan.cube.tank.EnemyTank;
 import cn.lllllan.cube.tank.TankImpl;
 import cn.lllllan.cube.tank.UserTank;
 import cn.lllllan.data.Data;
+import cn.lllllan.data.Data1;
+import cn.lllllan.data.Data2;
 import cn.lllllan.gif.BlastGif;
 import cn.lllllan.gif.Gif;
 import cn.lllllan.gif.HitGif;
@@ -26,6 +28,8 @@ import java.util.Vector;
 @SuppressWarnings({"all"})
 
 public class LevelStage extends Stage implements Runnable {
+
+    private static final int MAX_LEVEL = 8;
 
     private static final int WIDTH = 1100;
     private static final int HEIGHT = 700;
@@ -53,13 +57,14 @@ public class LevelStage extends Stage implements Runnable {
     private int user2Kill;
 
     private Data data;
+    private int level;
 
-    public LevelStage(Data data) {
+    public LevelStage(int level) {
         barriers = new Vector<>();
         enemyTanks = new Vector<>();
         bullets = new Vector<>();
         gifs = new Vector<>();
-        this.data = data;
+        this.level = level % MAX_LEVEL;
 
         // 不明原因：第一次爆炸不会绘制，因此先生成一个显示界面之外的爆炸
         gifs.add(new BlastGif(-100, -100));
@@ -71,6 +76,16 @@ public class LevelStage extends Stage implements Runnable {
         barriers.clear();
         enemyTanks.clear();
         bullets.clear();
+
+        switch (level) {
+            case 0:
+                data = new Data1();
+                break;
+            case 1:
+                data = new Data2();
+                break;
+            default:
+        }
 
         int add = BarrierImpl.getSIZE();
         for (int col = 0; col <= HEIGHT; col += add) {

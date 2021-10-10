@@ -3,9 +3,7 @@ package cn.lllllan.game;
 import cn.lllllan.cube.tank.UserTank;
 import cn.lllllan.cube.tank.UserTank1;
 import cn.lllllan.cube.tank.UserTank2;
-import cn.lllllan.data.Data2;
 import cn.lllllan.stage.*;
-import cn.lllllan.stage.level.Level1;
 
 import javax.swing.*;
 import java.awt.*;
@@ -57,8 +55,9 @@ public class Game implements KeyListener, Runnable {
         new Thread(game).start();
 
         levels = new Vector<>();
-        levels.add(new Level1());
-        levels.add(new LevelStage(new Data2()));
+        for (int i = 0; i < 2; ++i) {
+            levels.add(new LevelStage(i));
+        }
 
         initialStage = new InitialStage();
         tankSelectStage = new TankSelectStage();
