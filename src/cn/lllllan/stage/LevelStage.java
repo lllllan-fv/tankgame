@@ -9,6 +9,9 @@ import cn.lllllan.cube.tank.EnemyTank;
 import cn.lllllan.cube.tank.TankImpl;
 import cn.lllllan.cube.tank.UserTank;
 import cn.lllllan.data.Data;
+import cn.lllllan.gif.BlastGif;
+import cn.lllllan.gif.Gif;
+import cn.lllllan.gif.HitGif;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -41,7 +44,7 @@ public class LevelStage extends Stage implements Runnable {
     private Vector<BarrierImpl> barriers;
     private Vector<EnemyTank> enemyTanks;
     private Vector<BulletImpl> bullets;
-    private Vector<Cube> destroyCubes;
+    private Vector<Gif> gifs;
 
     private UserTank user1;
     private UserTank user2;
@@ -55,8 +58,11 @@ public class LevelStage extends Stage implements Runnable {
         barriers = new Vector<>();
         enemyTanks = new Vector<>();
         bullets = new Vector<>();
-        destroyCubes = new Vector<>();
+        gifs = new Vector<>();
         this.data = data;
+
+        // 不明原因：第一次爆炸不会绘制，因此先生成一个显示界面之外的爆炸
+        gifs.add(new BlastGif(-100, -100));
 
         init();
     }
@@ -96,17 +102,29 @@ public class LevelStage extends Stage implements Runnable {
         }
     }
 
+    public void setData(Data data) {
+        this.data = data;
+    }
+
     public void reInit(UserTank[] users) {
         setUserTanks(users);
         init();
     }
 
     public boolean isOver() {
-        return enemyTanks.size() == 0;
+        return (enemyTanks.size() == 0) && (gifs.size() == 0);
     }
 
     public boolean isLive() {
-        return (user1 != null || user2 != null);
+        return (user1 != null || user2 != null) || (gifs.size() != 0);
+    }
+
+    public int getUser1Kill() {
+        return user1Kill;
+    }
+
+    public int getUser2Kill() {
+        return user2Kill;
     }
 
     public void addBarrier(BarrierImpl barrier) {
@@ -255,11 +273,11 @@ public class LevelStage extends Stage implements Runnable {
         int[] ans = new int[4];
         if (enemyTank == null || userTank == null) return ans;
 
-        if (userTank.getX() + userTank.getWidth() < enemyTank.getX()) ans[3] = 1;
-        else if (enemyTank.getX() + enemyTank.getWidth() < userTank.getX()) ans[1] = 1;
+        if (userTank.getX() + userTank.getWidth() <= enemyTank.getX()) ans[3] = 1;
+        else if (enemyTank.getX() + enemyTank.getWidth() <= userTank.getX()) ans[1] = 1;
 
-        if (userTank.getY() + userTank.getHeight() < enemyTank.getY()) ans[0] = 1;
-        else if (enemyTank.getY() + enemyTank.getHeight() < userTank.getY()) ans[2] = 1;
+        if (userTank.getY() + userTank.getHeight() <= enemyTank.getY()) ans[0] = 1;
+        else if (enemyTank.getY() + enemyTank.getHeight() <= userTank.getY()) ans[2] = 1;
 
         return ans;
     }
@@ -358,7 +376,6 @@ public class LevelStage extends Stage implements Runnable {
     }
 
     public void bulletsMove() {
-        bullets.remove(null);
         for (BulletImpl bullet : bullets) {
             bulletMove(bullet);
         }
@@ -482,37 +499,32 @@ public class LevelStage extends Stage implements Runnable {
         return null;
     }
 
-    public void addToDestroyList(Cube cube) {
-        destroyCubes.add(cube);
-    }
-
-    public void clearDestroyLIst() {
-        for (Cube cube : destroyCubes) {
-            if (cube.isTank()) destroyEnemyTank((EnemyTank) cube);
-            else destroyBarrier((BarrierImpl) cube);
-        }
+    public void makeBlast(Cube cube) {
+        gifs.add(new BlastGif(cube.getX(), cube.getY()));
     }
 
     public void destroyUserTank(UserTank userTank) {
         if (userTank == null) return;
         userTank.lifeDown();
         if (userTank.getLife() == 0) {
+            makeBlast(userTank);
             if (userTank == user1) user1 = null;
             if (userTank == user2) user2 = null;
         }
     }
 
     public void destroyEnemyTank(EnemyTank enemyTank) {
-        if (enemyTank == null) return;
         enemyTank.lifeDown();
-        if (enemyTank.getLife() == 0) enemyTanks.remove(enemyTank);
+        if (enemyTank.getLife() == 0) {
+            makeBlast(enemyTank);
+            enemyTanks.remove(enemyTank);
+        }
     }
 
     public void bulletHitEnemyTank(BulletImpl bullet, EnemyTank enemyTank) {
         if (bullet == null || enemyTank == null || bullet.getBelong() == enemyTank) return;
 
-        // !!!
-        addToDestroyList(enemyTank);
+        destroyEnemyTank(enemyTank);
 
         if (enemyTank.getLife() == 0) {
             TankImpl tank = bullet.getBelong();
@@ -523,9 +535,11 @@ public class LevelStage extends Stage implements Runnable {
     }
 
     public void destroyBarrier(BarrierImpl barrier) {
-        if (barrier == null) return;
         barrier.lifeDown();
-        if (barrier.getLife() == 0) barriers.remove(barrier);
+        if (barrier.getLife() == 0) {
+            makeBlast(barrier);
+            barriers.remove(barrier);
+        }
     }
 
     public void destroy() {
@@ -538,8 +552,8 @@ public class LevelStage extends Stage implements Runnable {
             if (cube.isTank()) {
                 if (((TankImpl) cube).isEnemy()) bulletHitEnemyTank(bullet, (EnemyTank) cube);
                 else destroyUserTank((UserTank) cube);
-            } else {
-                addToDestroyList(cube);
+            } else if (((BarrierImpl) cube).isCanBeBorken()) {
+                destroyBarrier((BarrierImpl) cube);
             }
 
             TankImpl tank = bullet.getBelong();
@@ -549,7 +563,9 @@ public class LevelStage extends Stage implements Runnable {
 
         for (BulletImpl bullet : del) {
             bullets.remove(bullet);
+            gifs.add(new HitGif(bullet.getX(), bullet.getY()));
         }
+
     }
 
     @Override
@@ -627,7 +643,6 @@ public class LevelStage extends Stage implements Runnable {
             if (!stopFlag) {
 
                 destroy();
-                clearDestroyLIst();
                 bulletsMove();
 
                 if (moveFlag) {
@@ -654,6 +669,8 @@ public class LevelStage extends Stage implements Runnable {
         paintEnemyTanks(g);
         paintBarriers(g);
         paintBullets(g);
+        paintGifs(g);
+        clearGifs();
     }
 
     public void paintSplitLine(Graphics g) {
@@ -715,6 +732,22 @@ public class LevelStage extends Stage implements Runnable {
     public void paintBarriers(Graphics g) {
         for (BarrierImpl barrier : barriers) {
             barrier.paint(g, this);
+        }
+    }
+
+    public void paintGifs(Graphics g) {
+        for (Gif gif : gifs) {
+            gif.paint(g, this);
+        }
+    }
+
+    public void clearGifs() {
+        Vector<Gif> del = new Vector<>();
+        for (Gif gif : gifs) {
+            if (!gif.isLve()) del.add(gif);
+        }
+        for (Gif gif : del) {
+            gifs.remove(gif);
         }
     }
 }

@@ -12,6 +12,7 @@ public class Data1 extends Data {
         super();
 
         super.addEnemyTank(new EnemyTank(0, 400, 400));
+        super.addEnemyTank(new EnemyTank(0, 500, 400));
 
         super.setUserTanksCoordinate(new int[][]{{100, 100}, {200, 100}});
     }

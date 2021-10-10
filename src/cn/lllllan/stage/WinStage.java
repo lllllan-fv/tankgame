@@ -7,6 +7,25 @@ import java.net.URL;
 
 public class WinStage extends Stage implements Runnable {
 
+    private int score1;
+    private int score2;
+
+    public int getScore1() {
+        return score1;
+    }
+
+    public void setScore1(int score1) {
+        this.score1 = score1;
+    }
+
+    public int getScore2() {
+        return score2;
+    }
+
+    public void setScore2(int score2) {
+        this.score2 = score2;
+    }
+
     @Override
     public void run() {
 
@@ -27,11 +46,20 @@ public class WinStage extends Stage implements Runnable {
     public void paint(Graphics g) {
         super.paint(g);
 
-        g.setFont(new Font("隶书", Font.BOLD, 50));
-        g.drawString("WinStage", 100, 100);
+        String str;
+        if (score1 > score2) {
+            str = "玩家一获胜";
+        } else if (score1 == score2) {
+            str = "双方平局";
+        } else {
+            str = "玩家二获胜";
+        }
 
-        URL url = BarrierImpl.class.getResource("/img/tank/cover.png");
+        g.setFont(new Font("隶书", Font.BOLD, 50));
+        g.drawString(str, 100, 100);
+
+        URL url = BarrierImpl.class.getResource("/img/icon/win.png");
         Image img = Toolkit.getDefaultToolkit().getImage(url);
-        g.drawImage(img, 250, 300, 900, 436, this);
+        g.drawImage(img, -260, 0, 1900, 800, this);
     }
 }

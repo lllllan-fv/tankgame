@@ -33,11 +33,13 @@ public class EndStage extends Stage implements Runnable {
     public void paint(Graphics g) {
         super.paint(g);
 
+        g.setColor(Color.red);
         g.setFont(new Font("隶书", Font.BOLD, 50));
-        g.drawString("EndStage", 100, 100);
+        g.drawString("敬请期待，坦克大战二", 100, 100);
+        g.drawString("我赌你的枪里，没有子弹", 400, 200);
 
-        URL url = BarrierImpl.class.getResource("/img/tank/cover.png");
+        URL url = BarrierImpl.class.getResource("/img/icon/end.png");
         Image img = Toolkit.getDefaultToolkit().getImage(url);
-        g.drawImage(img, 250, 300, 900, 436, this);
+        g.drawImage(img, 500, 300, 534, 300, this);
     }
 }

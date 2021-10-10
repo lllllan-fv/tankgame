@@ -26,8 +26,8 @@ public class LoseStage extends Stage implements Runnable {
     @Override
     public void paint(Graphics g) {
         super.paint(g);
- 
-        URL url = BarrierImpl.class.getResource("/img/over.gif");
+
+        URL url = BarrierImpl.class.getResource("/img/icon/over.gif");
         Image img = Toolkit.getDefaultToolkit().getImage(url);
         g.drawImage(img, 300, 200, 800, 450, this);
     }

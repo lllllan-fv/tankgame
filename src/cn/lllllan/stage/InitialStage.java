@@ -47,7 +47,7 @@ public class InitialStage extends Stage implements Runnable {
             g.drawString(str, COORDINATES[i][0] + ICON_SIZE, COORDINATES[i][1]);
         }
 
-        URL url = BarrierImpl.class.getResource("/img/tank/cover.png");
+        URL url = BarrierImpl.class.getResource("/img/icon/cover.png");
         Image img = Toolkit.getDefaultToolkit().getImage(url);
         g.drawImage(img, 250, 300, 900, 436, this);
     }

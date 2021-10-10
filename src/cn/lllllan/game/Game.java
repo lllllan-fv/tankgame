@@ -3,9 +3,9 @@ package cn.lllllan.game;
 import cn.lllllan.cube.tank.UserTank;
 import cn.lllllan.cube.tank.UserTank1;
 import cn.lllllan.cube.tank.UserTank2;
-import cn.lllllan.data.Data1;
 import cn.lllllan.data.Data2;
 import cn.lllllan.stage.*;
+import cn.lllllan.stage.level.Level1;
 
 import javax.swing.*;
 import java.awt.*;
@@ -57,7 +57,7 @@ public class Game implements KeyListener, Runnable {
         new Thread(game).start();
 
         levels = new Vector<>();
-        levels.add(new LevelStage(new Data1()));
+        levels.add(new Level1());
         levels.add(new LevelStage(new Data2()));
 
         initialStage = new InitialStage();
@@ -127,6 +127,8 @@ public class Game implements KeyListener, Runnable {
                 currentStage = level;
                 break;
             case 4:
+                winStage.setScore1(((LevelStage) currentStage).getUser1Kill());
+                winStage.setScore2(((LevelStage) currentStage).getUser2Kill());
                 currentStage = winStage;
                 break;
             case 5:
@@ -182,10 +184,8 @@ public class Game implements KeyListener, Runnable {
         } else if (e.getKeyCode() == KeyEvent.VK_F8 && stageIndex > 2) {
             setStageIndex(2);
         } else {
-            if ((stageIndex == 4 || stageIndex == 5) && e.getKeyCode() == KeyEvent.VK_ENTER) {
+            if ((stageIndex == 4 || stageIndex == 5 || stageIndex == 6) && e.getKeyCode() == KeyEvent.VK_ENTER) {
                 setStageIndex(3);
-            } else if (stageIndex == 6) {
-                setStageIndex(0);
             } else {
                 if (stageIndex == 0 && e.getKeyCode() == KeyEvent.VK_ENTER) {
                     tankSelectStage.setUserNumber(initialStage.getIndex() + 1);
