@@ -55,7 +55,8 @@ public class Game implements KeyListener, Runnable {
         new Thread(game).start();
 
         levels = new Vector<>();
-        for (int i = 0; i < 2; ++i) {
+//        for (int i = 0; i < 2; ++i) {
+        for (int i = 1; i >= 0; --i) {
             levels.add(new LevelStage(i));
         }
 
@@ -183,8 +184,10 @@ public class Game implements KeyListener, Runnable {
         } else if (e.getKeyCode() == KeyEvent.VK_F8 && stageIndex > 2) {
             setStageIndex(2);
         } else {
-            if ((stageIndex == 4 || stageIndex == 5 || stageIndex == 6) && e.getKeyCode() == KeyEvent.VK_ENTER) {
+            if ((stageIndex == 4 || stageIndex == 5) && e.getKeyCode() == KeyEvent.VK_ENTER) {
                 setStageIndex(3);
+            } else if (stageIndex == 6 && e.getKeyCode() == KeyEvent.VK_ENTER) {
+                setStageIndex(0);
             } else {
                 if (stageIndex == 0 && e.getKeyCode() == KeyEvent.VK_ENTER) {
                     tankSelectStage.setUserNumber(initialStage.getIndex() + 1);
@@ -228,7 +231,6 @@ public class Game implements KeyListener, Runnable {
                 }
             }
 
-//            System.out.println(Thread.currentThread().getName());
         }
     }
 }

@@ -1,6 +1,5 @@
 package cn.lllllan.stage;
 
-import cn.lllllan.bullet.Bullet;
 import cn.lllllan.bullet.BulletImpl;
 import cn.lllllan.cube.Cube;
 import cn.lllllan.cube.barrier.BarrierImpl;
@@ -74,6 +73,7 @@ public class LevelStage extends Stage implements Runnable {
     }
 
     public void init() {
+        user1Kill = user2Kill = 0;
         barriers.clear();
         enemyTanks.clear();
         bullets.clear();
@@ -100,12 +100,16 @@ public class LevelStage extends Stage implements Runnable {
         }
 
         Vector<BarrierImpl> dataBarriers = data.getBarriers();
-        for (BarrierImpl barrier : dataBarriers) {
+        Iterator<BarrierImpl> iterator = dataBarriers.iterator();
+        while (iterator.hasNext()) {
+            BarrierImpl barrier = iterator.next();
             barriers.add(barrier);
         }
 
         Vector<EnemyTank> dataEnemyTanks = data.getEnemyTanks();
-        for (EnemyTank enemyTank : dataEnemyTanks) {
+        Iterator<EnemyTank> iterator1 = dataEnemyTanks.iterator();
+        while (iterator1.hasNext()) {
+            EnemyTank enemyTank = iterator1.next();
             enemyTanks.add(enemyTank);
         }
 
@@ -199,11 +203,15 @@ public class LevelStage extends Stage implements Runnable {
         distance = Math.min(distance, calculateDistanceOfTankToOtherCubes(tank, user1));
         distance = Math.min(distance, calculateDistanceOfTankToOtherCubes(tank, user2));
 
-        for (EnemyTank enemyTank : enemyTanks) {
+        Iterator<EnemyTank> iterator = enemyTanks.iterator();
+        while (iterator.hasNext()) {
+            EnemyTank enemyTank = iterator.next();
             distance = Math.min(distance, calculateDistanceOfTankToOtherCubes(tank, enemyTank));
         }
 
-        for (BarrierImpl barrier : barriers) {
+        Iterator<BarrierImpl> iterator1 = barriers.iterator();
+        while (iterator1.hasNext()) {
+            BarrierImpl barrier = iterator1.next();
             distance = Math.min(distance, calculateDistanceOfTankToOtherCubes(tank, barrier));
         }
 
@@ -304,7 +312,9 @@ public class LevelStage extends Stage implements Runnable {
         boolean rightTop = false;
         boolean rightBottom = false;
 
-        for (BarrierImpl barrier : barriers) {
+        Iterator<BarrierImpl> iterator = barriers.iterator();
+        while (iterator.hasNext()) {
+            BarrierImpl barrier = iterator.next();
             if (barrier.isCanTankPass()) {
 
                 if (barrier.getX() + barrier.getWidth() / 2 == userTank.getX()
@@ -379,10 +389,14 @@ public class LevelStage extends Stage implements Runnable {
     }
 
     public void enemyTanksMoveAndShoot() {
-        for (EnemyTank enemyTank : enemyTanks) {
+        Iterator<EnemyTank> iterator = enemyTanks.iterator();
+        while (iterator.hasNext()) {
+            EnemyTank enemyTank = iterator.next();
             enemyTankMove(enemyTank);
         }
-        for (EnemyTank enemyTank : enemyTanks) {
+        iterator = enemyTanks.iterator();
+        while (iterator.hasNext()) {
+            EnemyTank enemyTank = iterator.next();
             enemyTankShoot(enemyTank);
         }
     }
@@ -497,7 +511,9 @@ public class LevelStage extends Stage implements Runnable {
             if ((cube = isBulletHitCube(type, user2)) != null) return cube;
         }
 
-        for (BarrierImpl barrier : barriers) {
+        Iterator<BarrierImpl> iterator = barriers.iterator();
+        while (iterator.hasNext()) {
+            BarrierImpl barrier = iterator.next();
             int type = isBulletHitCube(bullet, barrier);
 
             if ((cube = isBulletHitCube(type, barrier)) != null) return cube;
@@ -507,7 +523,9 @@ public class LevelStage extends Stage implements Runnable {
             }
         }
 
-        for (EnemyTank enemyTank : enemyTanks) {
+        Iterator<EnemyTank> iterator1 = enemyTanks.iterator();
+        while (iterator1.hasNext()) {
+            EnemyTank enemyTank = iterator1.next();
             if (bullet.getBelong() == enemyTank) continue;
             int type = isBulletHitCube(bullet, enemyTank);
             if ((cube = isBulletHitCube(type, enemyTank)) != null) return cube;
@@ -545,8 +563,13 @@ public class LevelStage extends Stage implements Runnable {
         if (enemyTank.getLife() == 0) {
             TankImpl tank = bullet.getBelong();
 
-            if (tank == user1) user1Kill++;
-            else if (tank == user2) user2Kill++;
+            if (tank == user1) {
+                user1Kill++;
+                user1.lifeUp();
+            } else if (tank == user2) {
+                user2Kill++;
+                user2.lifeUp();
+            }
         }
     }
 
@@ -579,12 +602,12 @@ public class LevelStage extends Stage implements Runnable {
             del.add(bullet);
         }
 
-
-        for (BulletImpl bullet : del) {
+        Iterator<BulletImpl> iterator1 = del.iterator();
+        while (iterator1.hasNext()) {
+            BulletImpl bullet = iterator1.next();
             bullets.remove(bullet);
             gifs.add(new HitGif(bullet.getX(), bullet.getY()));
         }
-
     }
 
     @Override
@@ -654,27 +677,27 @@ public class LevelStage extends Stage implements Runnable {
         while (true) {
             try {
                 Thread.sleep(50);
+
+                if (!stopFlag) {
+
+                    destroy();
+
+                    if (moveFlag) {
+                        enemyTanksMoveAndShoot();
+                        userTanksMove();
+                    }
+                    bulletsMove();
+
+                    moveFlag ^= true;
+
+                    this.repaint();
+                }
+
             } catch (InterruptedException e) {
                 System.out.println("level InterruptedException");
                 break;
             }
-
-            if (!stopFlag) {
-
-                destroy();
-                bulletsMove();
-
-                if (moveFlag) {
-                    enemyTanksMoveAndShoot();
-                    userTanksMove();
-                }
-
-                moveFlag ^= true;
-
-                this.repaint();
-            }
         }
-
     }
 
     @Override
@@ -736,36 +759,48 @@ public class LevelStage extends Stage implements Runnable {
     }
 
     public void paintEnemyTanks(Graphics g) {
-        for (EnemyTank enemyTank : enemyTanks) {
+        Iterator<EnemyTank> iterator = enemyTanks.iterator();
+        while (iterator.hasNext()) {
+            EnemyTank enemyTank = iterator.next();
             enemyTank.paint(g, this);
         }
     }
 
     public void paintBullets(Graphics g) {
-        for (Bullet bullet : bullets) {
-            if (bullet == null) continue;
+        Iterator<BulletImpl> iterator = bullets.iterator();
+        while (iterator.hasNext()) {
+            BulletImpl bullet = iterator.next();
             bullet.paint(g, this);
         }
     }
 
     public void paintBarriers(Graphics g) {
-        for (BarrierImpl barrier : barriers) {
+        Iterator<BarrierImpl> iterator = barriers.iterator();
+        while (iterator.hasNext()) {
+            BarrierImpl barrier = iterator.next();
             barrier.paint(g, this);
         }
     }
 
     public void paintGifs(Graphics g) {
-        for (Gif gif : gifs) {
+        Iterator<Gif> iterator = gifs.iterator();
+        while (iterator.hasNext()) {
+            Gif gif = iterator.next();
             gif.paint(g, this);
         }
     }
 
     public void clearGifs() {
         Vector<Gif> del = new Vector<>();
-        for (Gif gif : gifs) {
+        Iterator<Gif> iterator = gifs.iterator();
+        while (iterator.hasNext()) {
+            Gif gif = iterator.next();
             if (!gif.isLve()) del.add(gif);
         }
-        for (Gif gif : del) {
+
+        Iterator<Gif> iterator1 = del.iterator();
+        while (iterator1.hasNext()) {
+            Gif gif = iterator1.next();
             gifs.remove(gif);
         }
     }

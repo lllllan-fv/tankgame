@@ -50,6 +50,10 @@ public class Cube {
         if (life > 0) life--;
     }
 
+    public void lifeUp() {
+        life++;
+    }
+
     public boolean isTank() {
         return isTank;
     }
