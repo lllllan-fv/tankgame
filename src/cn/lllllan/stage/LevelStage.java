@@ -17,6 +17,7 @@ import cn.lllllan.gif.HitGif;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.util.Iterator;
 import java.util.Vector;
 
 /**
@@ -560,7 +561,9 @@ public class LevelStage extends Stage implements Runnable {
     public void destroy() {
         Vector<BulletImpl> del = new Vector<>();
 
-        for (BulletImpl bullet : bullets) {
+        Iterator<BulletImpl> iterator = bullets.iterator();
+        while (iterator.hasNext()) {
+            BulletImpl bullet = iterator.next();
             Cube cube = isBulletHitCube(bullet);
             if (cube == null) continue;
 
@@ -575,6 +578,7 @@ public class LevelStage extends Stage implements Runnable {
             tank.destroyBullet(bullet);
             del.add(bullet);
         }
+
 
         for (BulletImpl bullet : del) {
             bullets.remove(bullet);
