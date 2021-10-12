@@ -10,6 +10,7 @@ import cn.lllllan.cube.tank.UserTank;
 import cn.lllllan.data.Data;
 import cn.lllllan.data.Data1;
 import cn.lllllan.data.Data2;
+import cn.lllllan.data.Data3;
 import cn.lllllan.gif.BlastGif;
 import cn.lllllan.gif.Gif;
 import cn.lllllan.gif.HitGif;
@@ -84,6 +85,9 @@ public class LevelStage extends Stage implements Runnable {
                 break;
             case 1:
                 data = new Data2();
+                break;
+            case 2:
+                data = new Data3();
                 break;
             default:
         }

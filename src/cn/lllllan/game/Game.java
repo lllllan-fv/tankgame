@@ -56,7 +56,7 @@ public class Game implements KeyListener, Runnable {
 
         levels = new Vector<>();
 //        for (int i = 0; i < 2; ++i) {
-        for (int i = 1; i >= 0; --i) {
+        for (int i = 2; i >= 0; --i) {
             levels.add(new LevelStage(i));
         }
 
