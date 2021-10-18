@@ -1,4 +1,4 @@
-package cn.lllllan.game;
+package cn.lllllan;
 
 import cn.lllllan.cube.tank.UserTank;
 import cn.lllllan.cube.tank.UserTank1;
