@@ -22,7 +22,7 @@ public class EnemyTank extends TankImpl implements Tank {
     public EnemyTank(int tankID, int x, int y) {
         super(1, tankID, x, y);
         super.setLife(tankID + 5);
-        super.setMAX_BULLETS_NUMBER(6);
+        super.setMax_bullets_number(6);
         turningRandom = rand();
     }
 
