@@ -11,7 +11,7 @@ import java.net.URL;
 import java.util.Vector;
 
 /**
- * 坦克基类的升级版，提供图片的绘制
+ * 坦克基类
  *
  * @author lllllan
  * <p>

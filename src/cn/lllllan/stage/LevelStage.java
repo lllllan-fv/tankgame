@@ -266,7 +266,7 @@ public class LevelStage extends Stage implements Runnable {
         if (userTank == null || userTank.getMoving() == 0) return;
 
         if (userTank.getMoving() == 1) {
-            userTank.keepMoving();
+            userTank.startMoving();
             return;
         }
 
